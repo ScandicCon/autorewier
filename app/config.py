@@ -40,12 +40,13 @@ class Settings(BaseSettings):
     enforce_verified_accounts: bool = False
     require_email_verification: bool = False
     verification_code_ttl_minutes: int = 15
+    resend_api_key: str = ""
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_username: str = ""
     smtp_password: str = ""
     smtp_sender_email: str = ""
-    smtp_sender_name: str = "AutoRewier"
+    smtp_sender_name: str = "ПОДКАПОТ"
     smtp_use_tls: bool = True
 
     # Autocode B2B API
