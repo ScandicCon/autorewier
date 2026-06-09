@@ -139,6 +139,12 @@ class Settings(BaseSettings):
             raw.startswith("'") and raw.endswith("'")
         ):
             raw = raw[1:-1]
+        # Railway/Heroku give plain postgresql:// — convert to asyncpg driver
+        if raw.startswith('postgres://'):
+            raw = 'postgresql+asyncpg://' + raw[len('postgres://'):]
+        elif raw.startswith('postgresql://') and '+' not in raw.split('://')[0]:
+            raw = 'postgresql+asyncpg://' + raw[len('postgresql://'):]
+
         # Common copy-paste mistake: password wrapped in [] in postgres URL.
         raw = re.sub(
             r"^(postgresql(?:\+asyncpg)?://[^:/?#]+):\[([^\]]+)\]@",
