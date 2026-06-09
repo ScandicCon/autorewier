@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПОДКАПОТ — Концепт D · Light Pop</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Manrope:wght@400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#fbf7ef;--bg2:#ffffff;--ink:#16140f;--green:#16a85d;--coral:#ff6b4a;--yellow:#ffd23f;--muted:#7a7568;--line:#e9e2d4;--car:#16a85d}
+body{background:var(--bg);color:var(--ink);font-family:'Manrope',system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.px{font-family:'Press Start 2P',monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:0 26px}
+svg{display:block}
+
+.gridbg{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(22,20,15,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(22,20,15,.035) 1px,transparent 1px);background-size:30px 30px;mask-image:radial-gradient(ellipse 90% 80% at 50% 20%,#000 40%,transparent 85%)}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+.logo .b{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#fff;background:var(--green);box-shadow:0 4px 0 #0e7a42}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted);font-weight:600}
+.nav-links a:hover{color:var(--green)}
+.btn{border:none;cursor:pointer;font-family:inherit;font-weight:800;border-radius:12px;transition:.12s;padding:13px 22px}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 5px 0 #0e7a42}
+.btn-primary:active{transform:translateY(4px);box-shadow:0 1px 0 #0e7a42}
+.btn-ghost{background:#fff;color:var(--ink);border:2px solid var(--line)}
+.btn-ghost:hover{border-color:var(--green);color:var(--green)}
+
+.hero{position:relative;z-index:2;text-align:center;padding:34px 0 30px;min-height:76vh;display:flex;flex-direction:column;justify-content:center}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);z-index:-1}
+.bl1{width:420px;height:420px;background:rgba(22,168,93,.16);top:0;left:40%;transform:translateX(-50%);animation:pulse 7s ease-in-out infinite}
+.bl2{width:300px;height:300px;background:rgba(255,107,74,.14);bottom:8%;right:10%;animation:pulse 8s ease-in-out infinite 1s}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.tag{display:inline-flex;gap:8px;align-items:center;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--green);background:#e7f7ee;border:1px solid #c7ecd6;padding:7px 15px;border-radius:30px;margin:0 auto 22px}
+.hello{font-size:11px;letter-spacing:3px;color:var(--coral);margin-bottom:16px}
+h1{font-size:clamp(34px,7vw,72px);font-weight:800;line-height:1.02;letter-spacing:-1.5px}
+h1 .lite{color:var(--green)}
+h1 .mark{background:var(--yellow);padding:0 8px;border-radius:8px;display:inline-block;transform:rotate(-2deg)}
+.sub{max-width:540px;margin:22px auto 30px;color:var(--muted);font-size:18px;line-height:1.6}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+.stage{position:relative;margin-top:42px;height:200px;display:flex;align-items:center;justify-content:center}
+#car{width:300px;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 16px 22px rgba(22,168,93,.22))}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.shadow{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:210px;height:16px;background:radial-gradient(ellipse,rgba(22,20,15,.14),transparent 70%);filter:blur(5px);animation:sh 4s ease-in-out infinite}
+@keyframes sh{0%,100%{width:210px}50%{width:165px}}
+.card{position:absolute;background:#fff;border:1px solid var(--line);box-shadow:0 8px 24px rgba(22,20,15,.08);padding:11px 15px;border-radius:14px;font-size:13px;font-weight:700;display:flex;gap:9px;align-items:center;z-index:3}
+.card .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:14px}
+.card.g .ic{background:#e7f7ee}.card.c .ic{background:#ffe9e3}.card.y .ic{background:#fff5d6}
+.card small{display:block;color:var(--muted);font-weight:600;font-size:11px}
+.k1{top:4%;left:6%;animation:fl 5s ease-in-out infinite}
+.k2{top:16%;right:5%;animation:fl 6s ease-in-out infinite .5s}
+.k3{bottom:26%;left:4%;animation:fl 5.5s ease-in-out infinite .8s}
+.k4{bottom:16%;right:8%;animation:fl 6.5s ease-in-out infinite .3s}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+
+.trust{position:relative;z-index:2;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:24px 0 56px}
+.tcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 26px;min-width:150px;text-align:center}
+.tcard b{display:block;font-size:30px;color:var(--green)}
+.tcard span{font-size:12px;color:var(--muted)}
+
+.how{position:relative;z-index:2;padding:30px 0 80px}
+.how h2{text-align:center;font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.how .lead{text-align:center;color:var(--muted);margin-bottom:36px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.step{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;transition:.15s}
+.step:hover{border-color:var(--green);transform:translateY(-4px);box-shadow:0 10px 26px rgba(22,168,93,.1)}
+.step .n{font-family:'Press Start 2P',monospace;font-size:13px;color:var(--coral);margin-bottom:14px}
+.step h3{font-size:18px;margin-bottom:8px}
+.step p{color:var(--muted);font-size:14px;line-height:1.55}
+.foot-note{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
+.pages{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.pages span{font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:20px;padding:6px 13px}
+</style>
+</head>
+<body>
+<div class="gridbg"></div>
+<div class="wrap">
+  <nav>
+    <div class="logo"><span class="b px" style="font-size:12px">П</span> ПОДКАПОТ</div>
+    <div class="nav-links"><a href="#">Как работает</a><a href="#">Тарифы</a><a href="#">Примеры</a><a href="#">FAQ</a></div>
+    <button class="btn btn-primary">Проверить авто</button>
+  </nav>
+</div>
+
+<section class="hero wrap">
+  <div class="blob bl1"></div><div class="blob bl2"></div>
+
+  <div class="card g k1"><span class="ic">✅</span><div>Риск<small>22% · низкий</small></div></div>
+  <div class="card c k2"><span class="ic">🔧</span><div>Ремонт<small>34–90К ₽</small></div></div>
+  <div class="card y k3"><span class="ic">📋</span><div>Чеклист<small>23 пункта</small></div></div>
+  <div class="card g k4"><span class="ic">🔎</span><div>VIN<small>чисто</small></div></div>
+
+  <div>
+    <div class="tag">🚗 TELEGRAM-БОТ · SAAS</div>
+    <div class="hello px">HELLO, DRIVER</div>
+    <h1>Покупай авто <span class="mark px" style="font-size:.5em">без</span><br><span class="lite">скрытых сюрпризов</span></h1>
+    <p class="sub">Кидаешь ссылку на объявление — бот находит риски, считает ремонт и собирает чеклист осмотра. Понятно и за 30 секунд.</p>
+    <div class="cta">
+      <button class="btn btn-primary">⚡ Проверить бесплатно</button>
+      <button class="btn btn-ghost">Пример отчёта →</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg id="car" viewBox="0 0 252 99"></svg>
+    <div class="shadow"></div>
+  </div>
+</section>
+
+<div class="wrap trust">
+  <div class="tcard"><b>30с</b><span>СРЕДНИЙ АНАЛИЗ</span></div>
+  <div class="tcard"><b>120+</b><span>ПУНКТОВ ПРОВЕРКИ</span></div>
+  <div class="tcard"><b>40К ₽</b><span>СРЕДНЯЯ ЭКОНОМИЯ</span></div>
+  <div class="tcard"><b>2 рынка</b><span>ПОКУПКА · ПЕРЕПРОДАЖА</span></div>
+</div>
+
+<section class="how wrap">
+  <h2>Как это работает</h2>
+  <p class="lead">Четыре шага от ссылки до решения «брать или нет».</p>
+  <div class="steps">
+    <div class="step"><div class="n">01</div><h3>Ссылка или вручную</h3><p>Вставь объявление с любой площадки или заполни марку, год, пробег и цену сам.</p></div>
+    <div class="step"><div class="n">02</div><h3>Фото и дефекты</h3><p>Добавь фото и то, что заметил по объявлению или со слов продавца.</p></div>
+    <div class="step"><div class="n">03</div><h3>Риски и чеклист</h3><p>Получи слабые места модели и персональный чеклист для очного осмотра.</p></div>
+    <div class="step"><div class="n">04</div><h3>Смета и вердикт</h3><p>Узнай стоимость ремонта, выгоду перепродажи и итог: брать / проверять / отказ.</p></div>
+  </div>
+  <p class="foot-note">Это многостраничный сайт. Страницы под выбранный стиль:</p>
+  <div class="pages"><span>Главная</span><span>Отчёт по авто</span><span>Запчасти и ссылки</span><span>Чеклист осмотра</span><span>Сравнение авто</span><span>Тарифы</span><span>FAQ</span></div>
+</section>
+
+<script>
+const CAR=[
+"                            ",
+"         oooooooooo         ",
+"        oggggggggggo        ",
+"     ooooggggggggggoooo     ",
+"    occcccccccccccccccco    ",
+"   occccccccccccccccccccho  ",
+"   occccccccccccccccccccho  ",
+"    occccccccccccccccccco   ",
+"      tttt       tttt       ",
+"      tmmt       tmmt       ",
+"      tttt       tttt       "
+];
+const COL={o:'#0e3a22',c:getComputedStyle(document.documentElement).getPropertyValue('--car').trim(),g:'#d4f3e2',h:'#ffd23f',t:'#16140f',m:'#eef6f0'};
+const PX=9,svg=document.getElementById('car');let s='';
+CAR.forEach((row,y)=>{[...row].forEach((ch,x)=>{if(ch!==' ')s+=`<rect x="${x*PX}" y="${y*PX}" width="${PX}" height="${PX}" fill="${COL[ch]}"/>`;});});
+svg.innerHTML=s;
+</script>
+</body>
+</html>

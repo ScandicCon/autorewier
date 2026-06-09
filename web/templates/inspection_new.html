@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Новая проверка — шаг 1{% endblock %}
+{% block content %}
+<section class="flow-intro">
+  <div>
+    <h1>Новая проверка автомобиля</h1>
+    <p class="muted">Соберите предварительный отчёт до выезда, проведите осмотр по персональному чеклисту и получите финальную экономику покупки.</p>
+  </div>
+  <ol class="stage-track">
+    <li class="active">Лот и параметры</li>
+    <li>Предварительные риски</li>
+    <li>Осмотр и находки</li>
+    <li>Финальный вывод</li>
+  </ol>
+</section>
+
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<div class="split-layout">
+  <section class="card feature-card">
+    <p class="eyebrow">Быстрый старт</p>
+    <h2>Вставьте ссылку объявления</h2>
+    <p class="muted">Подтянем описание, цену и заявленные работы с Avito. Обычно это занимает 10-30 секунд.</p>
+    <form method="post" action="/cabinet/new/avito" class="stacked-form">
+      <label>Ссылка на объявление
+        <input type="url" name="listing_url" required placeholder="https://www.avito.ru/...">
+      </label>
+      <button type="submit" class="btn">Загрузить объявление</button>
+    </form>
+  </section>
+
+  <section class="card feature-card">
+    <p class="eyebrow">Альтернатива</p>
+    <h2>Ручной ввод</h2>
+    <p class="muted">Если ссылки нет, заполните марку, пробег, цену и симптомы вручную. Логика анализа останется той же.</p>
+    <a href="/cabinet/new/manual" class="btn btn-outline">Перейти к ручному вводу</a>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПОДКАПОТ — проверка авто перед покупкой</title>
+<meta name="description" content="Кидаешь ссылку на объявление — бот находит риски, считает ремонт и собирает чеклист осмотра. За 30 секунд.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="gridbg"></div><div class="scan"></div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><img src="img/logo.png" class="logo-ico" alt="ПОДКАПОТ"> ПОДКАПОТ</a>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html" class="active">Главная</a>
+      <a href="report.html">Отчёт по авто</a>
+      <a href="parts.html">Запчасти</a>
+      <a href="checklist.html">Чеклист</a>
+      <a href="compare.html">Сравнение</a>
+      <a href="cabinet.html">Кабинет</a>
+      <a href="login.html">Войти</a>
+    </nav>
+    <a class="btn btn-primary" href="report.html"><svg class="ic-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg> Проверить авто</a>
+    <button class="menu-btn" onclick="toggleMenu()">≡</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero wrap">
+  <div class="hero-grid">
+    <div>
+      <div class="hello">HELLO, DRIVER</div>
+      <h1>Проверь тачку <span class="lite">до встречи</span> с продавцом</h1>
+      <p class="sub">Кидаешь ссылку на объявление — система находит риски, считает ремонт и собирает персональный чеклист осмотра. За 30 секунд, без сюрпризов.</p>
+
+      <div class="panel hud inputcard">
+        <div class="panel-b">
+          <div class="input-row">
+            <label class="field"><span class="pfx"><svg class="ic-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M15 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span><input placeholder="Ссылка на объявление (Avito, Auto.ru, Drom…)" value="https://www.avito.ru/.../toyota_camry_2017"></label>
+            <a class="btn btn-primary btn-block" href="report.html">Анализировать →</a>
+          </div>
+          <div class="or">— или заполни вручную —</div>
+          <div class="manual">
+            <input placeholder="Марка"><input placeholder="Модель"><input placeholder="Год"><input placeholder="Пробег"><input placeholder="Цена"><input placeholder="VIN">
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-tags" style="margin-top:14px">
+        <span class="htag"><span class="led"></span> Источник: Avito</span>
+        <span class="htag"><svg class="ic-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Обновлено: сегодня</span>
+        <span class="htag"><span class="led"></span> Парсинг: успешно</span>
+        <span class="htag"><svg class="ic-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg> Анализ 10–30 сек</span>
+      </div>
+    </div>
+
+    <div class="hero-art">
+      <div class="glowimg"></div>
+      <img src="img/hero-main.png" alt="Авто с HUD-диагностикой под капотом">
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="wrap">
+  <div class="stats">
+    <div class="panel hud stat"><b>30с</b><span>СРЕДНИЙ АНАЛИЗ</span></div>
+    <div class="panel hud stat"><b>120+</b><span>ПУНКТОВ ПРОВЕРКИ</span></div>
+    <div class="panel hud stat"><b>40К ₽</b><span>СРЕДНЯЯ ЭКОНОМИЯ</span></div>
+    <div class="panel hud stat"><b>2</b><span>РЫНКА: ПОКУПКА · ПЕРЕПРОДАЖА</span></div>
+  </div>
+</div>
+
+<!-- HOW -->
+<section class="section wrap" id="how">
+  <div class="section-head">
+    <div class="eyebrow">SETUP</div>
+    <h2 class="h-sec">Как это работает</h2>
+    <p class="lead">Четыре шага от ссылки до решения «брать или бежать».</p>
+  </div>
+  <div class="steps">
+    <div class="panel hud step" data-reveal><div class="n">01</div><h3>Ссылка или вручную</h3><p>Вставь объявление с любой площадки или заполни марку, год, пробег и цену сам.</p></div>
+    <div class="panel hud step" data-reveal><div class="n">02</div><h3>Фото и дефекты</h3><p>Добавь фото и то, что заметил по объявлению или со слов продавца.</p></div>
+    <div class="panel hud step" data-reveal><div class="n">03</div><h3>Риски и чеклист</h3><p>Получи слабые места модели и персональный чеклист для очного осмотра.</p></div>
+    <div class="panel hud step" data-reveal><div class="n">04</div><h3>Смета и вердикт</h3><p>Узнай стоимость ремонта, выгоду перепродажи и итог: брать / проверять / отказ.</p></div>
+  </div>
+  <div class="sec-img" data-reveal><img src="img/how.png" alt="Ссылка, фото, чеклист и оценка риска"></div>
+</section>
+
+<!-- AUDIENCES -->
+<section class="section wrap">
+  <div class="section-head">
+    <div class="eyebrow">ДЛЯ КОГО</div>
+    <h2 class="h-sec">Две аудитории — одна цель</h2>
+  </div>
+  <div class="aud">
+    <div class="panel hud" data-reveal>
+      <div class="ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 3 8.2 7 9.5 4-1.3 7-5.1 7-9.5V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <h3>Покупателю</h3>
+      <p>Безопасно купить подержанное авто и не попасть на скрытый ремонт.</p>
+      <ul>
+        <li>Видишь риски ещё до встречи с продавцом</li>
+        <li>Идёшь на осмотр с готовым чеклистом</li>
+        <li>Знаешь реальную стоимость владения</li>
+      </ul>
+    </div>
+    <div class="panel hud" data-reveal>
+      <div class="ic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18V9l5-4 5 3 6-3v9"/><path d="M4 18l5-4 5 3 6-3"/></svg></div>
+      <h3>Перекупу</h3>
+      <p>Быстро оценить риски, объём вложений и потенциальную прибыль по сделке.</p>
+      <ul>
+        <li>Считаешь экономику за 30 секунд</li>
+        <li>Сравниваешь несколько вариантов разом</li>
+        <li>Отсеиваешь убыточные сделки сразу</li>
+      </ul>
+    </div>
+  </div>
+  <div class="sec-img" data-reveal><img src="img/forwho.png" alt="Покупатель и перекуп: защита сделки и оценка прибыли"></div>
+</section>
+
+<!-- WHAT YOU GET -->
+<section class="section wrap">
+  <div class="section-head">
+    <div class="eyebrow">РЕЗУЛЬТАТ</div>
+    <h2 class="h-sec">Что выдаёт сервис</h2>
+    <p class="lead">Структурированный отчёт, в котором сразу видно: риски, деньги, что менять и где купить.</p>
+  </div>
+  <div class="steps">
+    <a class="panel hud step" data-reveal href="report.html"><div class="n n-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>Отчёт по авто</h3><p>Вердикт, risk score, риски с доказательствами и смета ремонта.</p></a>
+    <a class="panel hud step" data-reveal href="parts.html"><div class="n n-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg></div><h3>Запчасти и ссылки</h3><p>Что менять, наличие и ссылки на предложения с ценами.</p></a>
+    <a class="panel hud step" data-reveal href="checklist.html"><div class="n n-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div><h3>Чеклист осмотра</h3><p>Что и как проверять лично: визуально, на тест-драйве, по OBD-II.</p></a>
+    <a class="panel hud step" data-reveal href="compare.html"><div class="n n-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h13"/><path d="m17 20 4-4-4-4"/><path d="M21 16H8"/></svg></div><h3>История и сравнение</h3><p>Все прошлые проверки и сравнение вариантов между собой.</p></a>
+  </div>
+  <div class="sec-img" data-reveal><img src="img/output.png" alt="Дашборд отчёта: риск, ремонт, запчасти, статусы"></div>
+</section>
+
+<!-- FAQ -->
+<section class="section wrap">
+  <div class="section-head">
+    <div class="eyebrow">FAQ</div>
+    <h2 class="h-sec">Частые вопросы</h2>
+  </div>
+  <div class="faq" id="faqBody">
+    <div class="acc-item open"><div class

@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Проверка #{{ inspection.id }}{% endblock %}
+{% block content %}
+<section class="flow-intro">
+  <div>
+    <h1>{{ inspection.brand or 'Авто' }} {{ inspection.model or '' }} <span class="muted">#{{ inspection.id }}</span></h1>
+    <p class="muted">Карточка объединяет предварительный анализ, осмотровый чеклист и экономику сделки.</p>
+  </div>
+  <ol class="stage-track">
+    <li class="{{ 'done' if inspection.stage.value != 'draft' else 'active' }}">Лот и параметры</li>
+    <li class="{{ 'active' if inspection.stage.value == 'pre_inspection' else 'done' }}">Предварительные риски</li>
+    <li class="{{ 'active' if inspection.stage.value == 'post_inspection' else '' }}">Осмотр и находки</li>
+    <li class="{{ 'done' if inspection.stage.value == 'post_inspection' else '' }}">Финальный вывод</li>
+  </ol>
+</section>
+
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Recommendation</p>
+    <span class="verdict {{ inspection.verdict.value if inspection.verdict else '' }}">{{ report.verdict_label or inspection.verdict.value }}</span>
+  </div>
+  <div class="page-head-actions">
+    <a href="/api/v1/inspections/{{ inspection.id }}/pdf"
+       class="btn-pdf"
+       data-pdf-download="/api/v1/inspections/{{ inspection.id }}/pdf"
+       title="Скачать PDF-отчёт">
+      <span class="pdf-icon">⬇ PDF</span>
+      <span class="pdf-spinner"></span>
+    </a>
+  </div>
+</div>
+
+{% if vin_error %}<p class="error">VIN: {{ vin_error }}</p>{% endif %}
+
+{% if report.market_comparison %}
+{% set mc = report.market_comparison %}
+<section class="card">
+  <h2>📊 Цена vs рынок</h2>
+  <div class="market-comparison">
+    <div class="market-stats">
+      <article class="stat">
+        <p class="muted small">Медианная цена</p>
+        <strong>{{ '{:,}'.format(mc.median_price or 0).replace(',', ' ') }} ₽</strong>
+      </article>
+      <article class="stat">
+        <p class="muted small">Аналогов найдено</p>
+        <strong>{{ mc.similar_count or '—' }}</strong>
+      </article>
+      <article class="stat">
+        <p class="muted small">Отклонение от рынка</p>
+        <strong>
+          {% if mc.delta_pct is not none %}
+            {% if mc.delta_pct > 5 %}
+              <span class="market-delta overpriced">+{{ mc.delta_pct }}%</span>
+            {% elif mc.delta_pct < -5 %}
+              <span class="market-delta underpriced">{{ mc.delta_pct }}%</span>
+            {% else %}
+              <span class="market-delta fair">{{ mc.delta_pct }}%</span>
+            {% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </strong>
+      </article>
+    </div>
+    {% if mc.comment %}
+    <p class="market-comment">{{ mc.comment }}</p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>Предварительный вывод</h2>
+  <p>{{ report.summary }}</p>
+  {% if report.vin_summary %}
+  <p><strong>VIN:</strong> {{ report.vin_summary }}</p>
+  {% endif %}
+  <div class="stat-grid">
+    <article class="stat">
+      <p class="muted small">Оценка ремонта</p>
+      <strong>{{ '{:,}'.format(inspection.repair_min_rub or 0).replace(',', ' ') }} – {{ '{:,}'.format(inspection.repair_max_rub or 0).replace(',', ' ') }} ₽</strong>
+    </article>
+    <article class="stat">
+      <p class="muted small">Рисков в отчёте</p>
+      <strong>{{ (report.risks or [])|length }}</strong>
+    </article>
+    <article class="stat">
+      <p class="muted small">Пунктов в чеклисте</p>
+      <strong>{{ (report.checklist or [])|length }}</strong>
+    </article>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Контекст объявления и ваши приоритеты</h2>
+  {% if inspection.user_preferences %}
+  <p><strong>Ваши пожелания:</strong> {{ inspection.user_preferences }}</p>
+  {% endif %}
+  {% if inspection.description %}
+  <p class="muted small">Описание продавца</p>
+  <pre class="listing-repairs">{{ inspection.description }}</pre>
+  {% endif %}
+  {% if inspection.listing_repairs %}
+  <p class="muted small">Заявленные замены/работы</p>
+  <pre class="listing-repairs">{{ inspection.listing_repairs }}</pre>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Предварительные риски</h2>
+  <ul class="risk-list">
+  {% for r in report.risks or [] %}
+    <li><span class="sev {{ r.severity }}">{{ r.severity }}</span> <strong>{{ r.title }}</strong> — {{ r.description }}</li>
+  {% else %}
+    <li class="muted">Явных рисков по текущим данным не найдено, но чеклист осмотра всё равно обязателен.</li>
+  {% endfor %}
+  </ul>
+</section>
+
+{% if report.negotiation_tips %}
+<section class="card">
+  <h2>💬 Как торговаться с продавцом</h2>
+  <div class="tips-list">
+    {% for tip in report.negotiation_tips %}
+    <div class="tip-card">
+      <p>{{ tip }}</p>
+      <button type="button" class="btn-copy" data-copy-tip="{{ tip | e }}">Скопировать</button>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>🔍 Анализ фотографий</h2>
+  {% if report.photo_findings %}
+    <div class="photo-findings-list">
+      {% for f in report.photo_findings %}
+      <div class="photo-finding">
+        <div class="photo-finding-body">
+          <div>
+            <span class="badge">{{ f.zone }}</span>
+            {% if f.confidence %}
+              <span class="confidence {{ f.confidence }}">{{ f.confidence }}</span>
+            {% endif %}
+          </div>
+          <p>{{ f.description }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="upload-hint">
+      <span>📷</span>
+      <span>Загрузите фото для анализа — система выявит повреждения, следы ремонта и нарушения ЛКП.</span>
+    </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Персональный чеклист осмотра</h2>
+  {% for c in report.checklist or [] %}
+  <details class="check-item">
+    <summary><strong>{{ c.zone }}</strong> — {{ c.title }} <span class="muted small">как проверить</span></summary>
+    <p>{{ c.how_to_check }}</p>
+    <p class="small">Инструменты: {{ (c.tools or []) | join(', ') or '—' }}</p>
+    <p class="small warn">Тревожные признаки: {{ (c.red_flags or []) | join('; ') }}</p>
+  </details>
+  {% endfor %}
+</section>
+
+<section class="card">
+  <h2>Проверка VIN (Autocode)</h2>
+  <form method="post" action="/cabinet/inspection/{{ inspection.id }}/vin" class="inline-form">
+    <input name="vin" value="{{ inspection.vin or '' }}" placeholder="VIN" maxlength="17" required>
+    <button type="submit" class="btn btn-sm">Запросить отчёт</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Оценка ремонта и экономика перепродажи</h2>
+  <p><strong>Диапазон ремонта:</strong> {{ '{:,}'.format(inspection.repair_min_rub or 0).replace(',', ' ') }} – {{ '{:,}'.format(inspection.repair_max_rub or 0).replace(',', ' ') }} ₽</p>
+  {% if report.resale %}
+  <div class="stat-grid">
+    <article class="stat">
+      <p class="muted small">Покупка</p>
+      <strong>{{ '{:,}'.format(report.resale.purchase_price or 0).replace(',', ' ') }} ₽</strong>
+    </article>
+    <article class="stat">
+      <p class="muted small">Ремонт (середина)</p>
+      <strong>{{ '{:,}'.format(report.resale.repair_mid or 0).replace(',', ' ') }} ₽</strong>
+    </article>
+    <article class="stat">
+      <p class="muted small">Оценка маржи</p>
+      <strong>{{ '{:,}'.format(report.resale.estimated_margin or 0).replace(',', ' ') }} ₽</strong>
+    </article>
+  </div>
+  <p class="muted">{{ report.resale.comment }}</p>
+  {% else %}
+  <p class="muted">Для блока перепродажи включите режим в анкете новой проверки и задайте целевую цену продажи.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Запчасти и ориентиры цен</h2>
+  <p class="muted small">Ссылки ведут только на Авито. Источники магазинов показываются без прямых ссылок.</p>
+  {% for block in parts_pricing %}
+  <article class="part-block">
+    <h3>{{ block.category }} — {{ block.part_name }}</h3>
+    <p class="small">Запрос: <code>{{ block.search_query }}</code></p>
+    {% if block.estimate_min %}
+    <p><strong>Оценка:</strong> {{ '{:,}'.format(block.estimate_min).replace(',', ' ') }} – {{ '{:,}'.format(block.estimate_max).replace(',', ' ') }} ₽</p>
+    {% endif %}
+    {% if block.avito_min %}
+    <p>Авито: {{ '{:,}'.format(block.avito_min).replace(',', ' ') }} – {{ '{:,}'.format(block.avito_max).replace(',', ' ') }} ₽ (медиана {{ '{:,}'.format(block.avito_median or 0).replace(',', ' ') }} ₽)</p>
+    {% endif %}
+    {% if block.market_sources %}
+    <p class="muted">{{ block.market_sources | join(', ') }}: {{ '{:,}'.format(block.market_min or 0).replace(',', ' ') }} – {{ '{:,}'.format(block.market_max or 0).replace(',', ' ') }} ₽</p>
+    {% endif %}
+    {% if block.note %}<p class="small">{{ block.note }}</p>{% endif %}
+    {% if block.avito_offers %}
+    <ul class="offers">
+      {% for o in block.avito_offers %}
+      <li><a href="{{ o.url }}" target="_blank" rel="noopener">{{ o.title }}</a> — {{ '{:,}'.format(o.price_rub).replace(',', ' ') }} ₽</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </article>
+  {% else %}
+  <p class="muted">Данные по запчастям не найдены — уточните дефекты или повторите позже.</p>
+  {% endfor %}
+</section>
+
+{% if inspection.stage.value != 'post_inspection' %}
+<section class="card">
+  <div class="section-head">
+    <h2>После осмотра: внесите фактические находки</h2>
+    <button type="button" class="btn btn-sm btn-outline" data-add-finding="post">+ Добавить находку</button>
+  </div>
+  <form method="post" action="/cabinet/inspection/{{ inspection.id }}/post">
+    <div class="finding-list" data-finding-list="post"></div>
+    <label><strong>Сводка найденных дефектов</strong>
+      <textarea name="post_defects" rows="6" data-aggregate-target="post" required placeholder="Что подтвердилось на осмотре: дефекты, ошибки, шумы, следы ремонта..."></textarea>
+    </label>
+    <label>Комментарии к торгу / стратегии<textarea name="post_notes" rows="3" placeholder="Критичные пункты для торга, условия покупки, что проверить повторно..."></textarea></label>
+    <button type="submit" class="btn">Итоговый отчёт</button>
+  </form>
+</section>
+{% elif inspection.post_report %}
+<section class="card">
+  <h2>Итог после осмотра</h2>
+  <p><strong>{{ inspection.post_report.verdict_label }}</strong></p>
+  <p class="muted">{{ inspection.post_report.summary }}</p>
+</section>
+{% endif %}
+{% endblock %}

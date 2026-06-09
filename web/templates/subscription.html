@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Подписка{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Подписка Pro</h1>
+  {% if paid %}<p class="success">Оплата принята. Спасибо!</p>{% endif %}
+  {% if is_pro %}
+  <p class="success">У вас активен Pro до {{ user.subscription_until.strftime('%d.%m.%Y') if user.subscription_until else '—' }}</p>
+  {% else %}
+  <p>Бесплатно: {{ settings.free_inspections_per_month }} проверки в месяц.</p>
+  <p><strong>Pro — {{ settings.subscription_pro_price_rub }} ₽ / 30 дней</strong></p>
+  <ul>
+    <li>Безлимитные проверки</li>
+    <li>Проверка VIN через Autocode</li>
+    <li>Полный поиск цен на запчасти</li>
+  </ul>
+  <form method="post" action="/cabinet/subscription/pay">
+    <button type="submit" class="btn">Оплатить</button>
+  </form>
+  {% if not settings.yookassa_enabled %}
+  <p class="muted small">ЮKassa не настроена — в dev-режиме кнопка активирует Pro локально.</p>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

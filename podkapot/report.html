@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отчёт по авто — ПОДКАПОТ</title>
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add("js");addEventListener("load",function(){setTimeout(function(){if(!window.__pkReady){document.querySelectorAll("[data-reveal]").forEach(function(e){e.classList.add("reveal");});}},1500);});</script>
+</head>
+<body>
+<div class="gridbg"></div><div class="scan"></div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><img src="img/logo.png" class="logo-ico" alt="ПОДКАПОТ"> ПОДКАПОТ</a>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html">Главная</a>
+      <a href="report.html" class="active">Отчёт по авто</a>
+      <a href="parts.html">Запчасти</a>
+      <a href="checklist.html">Чеклист</a>
+      <a href="compare.html">Сравнение</a>
+      <a href="cabinet.html">Кабинет</a>
+      <a href="login.html">Войти</a>
+    </nav>
+    <a class="btn btn-primary" href="report.html"><svg class="ic-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg> Новая проверка</a>
+    <button class="menu-btn" onclick="toggleMenu()">≡</button>
+  </div>
+</header>
+
+<!-- BANNER -->
+<section class="wrap pbanner">
+  <div>
+    <div class="crumbs"><a href="index.html">Главная</a> / Отчёт по авто</div>
+    <h1>Toyota Camry 2.5 · 2017</h1>
+    <p>98 000 км · 1 850 000 ₽ · АКПП · бензин 2AR-FE. Анализ по объявлению Avito, фото и типовым слабостям модели.</p>
+    <div class="carline">// ANALYSIS COMPLETE</div>
+  </div>
+  <img src="img/report.png" alt="HUD-дашборд отчёта по авто">
+</section>
+
+<div class="wrap report-grid">
+  <!-- MAIN -->
+  <div class="report-main">
+
+    <!-- RISKS -->
+    <section class="panel hud" id="block-risks">
+      <div class="panel-h"><span class="ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17.5h.01"/></svg></span><h2>Риски с доказательствами</h2><span class="cnt" id="riskCount">5</span><span class="sp"></span></div>
+      <div class="panel-b">
+        <div class="toolbar">
+          <div class="seg" id="riskFilter">
+            <button class="on" data-f="all">Все</button>
+            <button data-f="high">Только high</button>
+            <button data-f="p1">Только P1</button>
+            <button data-f="noinfo">Скрыть инфо</button>
+          </div>
+          <span class="sortsel">Сортировка:
+            <select id="riskSort" onchange="sortRisks()">
+              <option value="prio">по приоритету</option>
+              <option value="cost">по стоимости влияния</option>
+            </select>
+          </span>
+        </div>
+        <div id="riskList"></div>
+      </div>
+    </section>
+
+    <!-- REPAIR -->
+    <section class="panel hud" id="block-repair">
+      <div class="panel-h"><span class="ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.6L4 16l4 4 5.9-5.9a3.5 3.5 0 0 0 4.6-4.6l-2.3 2.3-2-2z"/></svg></span><h2>Смета ремонта</h2><span class="sp"></span>
+        <label class="toggle" id="sellerToggle" onclick="toggleSeller()"><span class="sw"><i></i></span> Учесть замены продавца</label>
+      </div>
+      <div class="panel-b">
+        <table class="tbl">
+          <thead><tr><th>Категория</th><th>Работы</th><th>Приоритет</th><th>Стоимость, ₽</th></tr></thead>
+          <tbody id="repairBody"></tbody>
+        </table>
+        <div class="totrow">
+          <div class="tot"><span>Запчасти</span><b class="mono" id="tParts">—</b></div>
+          <div class="tot"><span>Работы</span><b class="mono" id="tLabor">—</b></div>
+          <div class="tot grand"><span>Итого</span><b class="mono" id="tTotal">—</b></div>
+        </div>
+        <p style="margin-top:14px;font-size:13px;color:var(--muted)">Подробный подбор деталей и ссылки на предложения — на странице <a href="parts.html" style="color:var(--cyan)">Запчасти →</a></p>
+      </div>
+    </section>
+
+    <!-- SELLER CLAIMS -->
+    <section class="panel hud" id="block-seller">
+      <div class="panel-h"><span class="ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-4 4z"/><path d="M8 10h8M8 13h5"/></svg></span><h2>Что заявил продавец</h2></div>
+      <div class="panel-b">
+        <div id="claimsBody"></div>
+        <div class="impact-note"><svg class="ic-svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6 6 4-3 7 8"/><path d="M20 17v-5h-5"/></svg> Заявленные замены снизили оценку ремонта на <b>~8%</b>. Требуют подтверждения чеками и заказ-нарядами.</div>
+      </div>
+    </section>
+
+    <!-- WEAK SPOTS -->
+    <section class="panel hud" id="block-weak">
+      <div class="panel-h"><span class="ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 7l9 5 9-5M3 17l9 5 9-5"/></svg></span><h2>Слабые места модели</h2><span class="cnt">Camry XV70 · 2.5</span></div>
+      <div class="panel-b" id="weakBody"></div>
+    </section>
+
+  </div>
+
+  <!-- ASIDE -->
+  <aside class="report-aside">
+    <div class="panel hud">
+      <div class="verdict-top">
+        <div class="vstatus"><svg class="ic-svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6"/></svg> Покупать</div>
+        <div class="vsub">Toyota Camry 2.5 · 2017 · 98 000 км</div>
+        <div class="gauge">
+          <svg width="130" height="130" viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(72,150,255,.18)" stroke-width="11"/>
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#37d27e" stroke-width="11" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="264"/>
+          </svg>
+          <div class="num"><div><b style="color:#37d27e">22%</b><span>risk score</span></div></div>
+        </div>
+      </div>
+      <div class="panel-b">
+        <div class="kv"><span class="k">Диапазон ремонта</span><span class="v big">34–90К ₽</span></div>
+        <div class="kv"><span class="k">Критичных рисков (P1)</span><span class="v">1</span></div>
+        <div class="kv"><span class="k">Запас по цене рынка</span><span class="v" style="color:var(--safe)">+4%</span></div>
+        <div class="summary-txt">Надёжная модель с прозрачной историей. Серьёзных рисков по кузову и двигателю не выявлено. Основное — проверить реальный пробег и плановый износ подвески. При торге −40–60К ремонт окупается.</div>
+        <div class="act-row">
+          <button class="btn btn-ghost"><svg class="ic-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18l-7-4-7 4z"/></svg> Сохранить</button>
+          <button class="btn btn-ghost"><svg class="ic-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Поделиться</button>
+        </div>
+        <a class="btn btn-primary act-full" href="checklist.html"><svg class="ic-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Открыть чеклист осмотра</a>
+      </div>
+    </div>
+    <div class="panel hud" style="padding:16px">
+      <div class="kv" style="border:none;padding:4px 0"><span class="k">Запчасти под замену</span><a href="parts.html" style="color:var(--cyan);font-weight:600;font-size:13px">4 позиции →</a></div>
+      <div class="kv" style="border:none;padding:4px 0"><span class="k">Похожие на рынке</span><a href="compare.html" style="color:var(--cyan);font-weight:600;font-size:13px">сравнить →</a></div>
+    </div>
+  </aside>
+</div>
+
+<footer class="footer">
+  <div class="wrap"><div class="copy">© 2026 ПОДКАПОТ · Демо-отчёт на примере Toyota Camry. Данные сгенерированы для прототипа.</div></div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

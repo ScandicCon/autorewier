@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080e17">
+  <meta name="description" content="AutoRewier — профессиональная проверка автомобиля перед покупкой. Анализ рисков, чеклист, цены запчастей, проверка VIN.">
+  <title>{% block title %}AutoRewier{% endblock %}</title>
+
+  <!-- Google Fonts: Outfit — современный технологичный шрифт -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Базовые стили (legacy + override) -->
+  <link rel="stylesheet" href="/static/app.css">
+  <!-- Новая дизайн-система -->
+  <link rel="stylesheet" href="/static/design.css">
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ====== ШАПКА ====== -->
+<header class="header" role="banner">
+  <a href="/" class="logo">
+    <span class="logo-mark" aria-hidden="true">AR</span>
+    AutoRewier
+  </a>
+
+  <!-- Десктопное меню -->
+  <nav class="nav-desktop" aria-label="Основная навигация">
+    {% if user %}
+      <a href="/cabinet">Кабинет</a>
+      <a href="/cabinet/new">Новая проверка</a>
+      <a href="/cabinet/subscription">Подписка{% if is_pro %} <span class="badge" style="margin-left:0.3rem">Pro</span>{% endif %}</a>
+    {% else %}
+      <a href="/#how-it-works">Как работает</a>
+      <a href="/#features">Возможности</a>
+      <a href="/#pricing">Тарифы</a>
+      <a href="/cabinet/login">Войти</a>
+      <a href="/cabinet/register" class="btn btn-sm">Начать бесплатно</a>
+    {% endif %}
+  </nav>
+
+  <!-- Кнопка гамбургер (mobile) -->
+  <button
+    id="nav-toggle"
+    class="nav-toggle"
+    aria-label="Открыть меню"
+    aria-expanded="false"
+    aria-controls="nav-mobile"
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Мобильное меню -->
+  <nav id="nav-mobile" class="nav-mobile" aria-label="Мобильная навигация">
+    {% if user %}
+      <a href="/cabinet">Кабинет</a>
+      <a href="/cabinet/new">Новая проверка</a>
+      <a href="/cabinet/subscription">Подписка{% if is_pro %} · Pro{% endif %}</a>
+    {% else %}
+      <a href="/#how-it-works">Как работает</a>
+      <a href="/#features">Возможности</a>
+      <a href="/#pricing">Тарифы</a>
+      <a href="/cabinet/login">Войти</a>
+      <a href="/cabinet/register" class="btn btn-sm" style="margin-top:0.5rem">Начать бесплатно</a>
+    {% endif %}
+  </nav>
+</header>
+
+<!-- ====== ОСНОВНОЙ КОНТЕНТ ====== -->
+<main class="container" id="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ====== ФУТЕР ====== -->
+{% block footer %}
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark" aria-hidden="true">AR</span>
+        AutoRewier
+      </a>
+      <p>Сервис проверки автомобилей перед покупкой. Анализ рисков, цены запчастей, VIN-история.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4>Сервис</h4>
+      <a href="/#how-it-works">Как работает</a>
+      <a href="/#features">Возможности</a>
+      <a href="/#pricing">Тарифы</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Кабинет</h4>
+      {% if user %}
+        <a href="/cabinet">Мои проверки</a>
+        <a href="/cabinet/new">Новая проверка</a>
+        <a href="/cabinet/subscription">Подписка</a>
+      {% else %}
+        <a href="/cabinet/register">Регистрация</a>
+        <a href="/cabinet/login">Войти</a>
+      {% endif %}
+    </div>
+
+    <div class="footer-col">
+      <h4>Поддержка</h4>
+      <a href="mailto:support@autorewier.ru">Написать нам</a>
+      <a href="/privacy">Политика конфиденциальности</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© {{ 2025 }} AutoRewier. Все права защищены.</span>
+    <span>Данные из открытых источников. Не является юридической экспертизой.</span>
+  </div>
+</footer>
+{% endblock %}
+
+<!-- Скрипты -->
+<script src="/static/app.js" defer></script>
+<script src="/static/design.js" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — AutoRewier{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card auth-animate">
+
+    <!-- Логотип -->
+    <div style="margin-bottom:2rem;text-align:center">
+      <a href="/" class="logo" style="justify-content:center">
+        <span class="logo-mark" aria-hidden="true">AR</span>
+        AutoRewier
+      </a>
+    </div>
+
+    <!-- Форма регистрации (показываем, если нет флага verify) -->
+    {% if not show_verify %}
+
+    <h1>Создать аккаунт</h1>
+    <p class="auth-sub">3 бесплатные проверки сразу после регистрации</p>
+
+    {% if error %}
+    <div class="alert alert-error" role="alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/cabinet/register" novalidate>
+
+      <div class="form-field">
+        <input
+          type="email"
+          name="email"
+          id="reg-email"
+          placeholder=" "
+          required
+          autocomplete="email"
+          value="{{ form_email or '' }}"
+        >
+        <label for="reg-email">Email</label>
+      </div>
+
+      <div class="form-field">
+        <input
+          type="password"
+          name="password"
+          id="reg-password"
+          placeholder=" "
+          required
+          minlength="6"
+          autocomplete="new-password"
+        >
+        <label for="reg-password">Пароль (минимум 6 символов)</label>
+      </div>
+
+      <!-- Преимущества регистрации -->
+      <div style="
+        background:var(--accent-soft);
+        border:1px solid var(--accent-glow);
+        border-radius:var(--r-md);
+        padding:0.85rem 1rem;
+        margin-bottom:1.4rem;
+        display:grid;
+        gap:0.4rem;
+      ">
+        <div style="font-size:0.82rem;color:var(--text-soft);display:flex;align-items:center;gap:0.5rem">
+          <span style="color:var(--ok)">✓</span> 3 бесплатные проверки каждый месяц
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-soft);display:flex;align-items:center;gap:0.5rem">
+          <span style="color:var(--ok)">✓</span> Полный анализ рисков и чеклист осмотра
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-soft);display:flex;align-items:center;gap:0.5rem">
+          <span style="color:var(--ok)">✓</span> История проверок сохраняется навсегда
+        </div>
+      </div>
+
+      <div class="auth-actions">
+        <button type="submit" class="btn" style="width:100%;justify-content:center">
+          Зарегистрироваться
+        </button>
+      </div>
+
+    </form>
+
+    <div class="auth-divider">уже есть аккаунт?</div>
+
+    <div class="auth-links">
+      <a href="/cabinet/login">Войти</a>
+    </div>
+
+    {% else %}
+
+    <!-- ====== ВЕРИФИКАЦИЯ EMAIL ====== -->
+    <div style="text-align:center">
+
+      <div style="
+        width:64px;height:64px;
+        background:var(--accent-soft);
+        border:2px solid var(--accent-glow);
+        border-radius:var(--r-xl);
+        display:flex;align-items:center;justify-content:center;
+        font-size:1.8rem;
+        margin:0 auto 1.5rem;
+      " aria-hidden="true">📧</div>
+
+      <h1 style="margin-bottom:0.5rem">Подтвердите email</h1>
+      <p class="auth-sub">
+        Мы отправили 6-значный код на<br>
+        <strong style="color:var(--text)">{{ verify_email or 'ваш email' }}</strong>
+      </p>
+
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error" role="alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/api/v1/auth/verify-email" id="verify-form" novalidate>
+      <!-- Скрытое поле с итоговым кодом -->
+      <input type="hidden" name="code" id="verification-code">
+
+      <p style="text-align:center;font-size:0.9rem;color:var(--muted);margin-bottom:0.5rem">
+        Введите код из письма
+      </p>
+
+      <!-- 6 полей ввода кода -->
+      <div class="code-inputs" id="code-inputs-container" role="group" aria-label="Поля ввода кода верификации">
+        <input class="code-digit" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="one-time-code" aria-label="Цифра 1">
+        <input class="code-digit" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" aria-label="Цифра 2">
+        <input class="code-digit" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" aria-label="Цифра 3">
+        <input class="code-digit" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" aria-label="Цифра 4">
+        <input class="code-digit" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" aria-label="Цифра 5">
+        <input class="code-digit" type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" aria-label="Цифра 6">
+      </div>
+
+      <div class="auth-actions">
+        <button type="submit" class="btn" style="width:100%;justify-content:center">
+          Подтвердить
+        </button>
+      </div>
+    </form>
+
+    <!-- Таймер повторной отправки -->
+    <div class="resend-block">
+      <span class="resend-timer" id="resend-timer">
+        Отправить снова через <span class="countdown" id="resend-countdown">60</span>&nbsp;сек
+      </span>
+      <button class="btn-resend" id="resend-btn" disabled type="button" aria-live="polite">
+        Отправить снова
+      </button>
+    </div>
+
+    <div class="auth-links" style="margin-top:1.2rem">
+      <a href="/cabinet/register">← Изменить email</a>
+    </div>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

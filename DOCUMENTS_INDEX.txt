@@ -1,0 +1,382 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                  SPRINT DOCUMENTS INDEX & QUICK REFERENCE                     ║
+║                          ПОДКАПОТ MVP (3 Weeks)                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+📋 SPRINT DOCUMENTATION (8 Main Documents)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. 00_START_HERE.md
+   Purpose: Navigation hub, quick orientation
+   Read time: 5 min
+   For: Everyone on Day 1
+   Contains: Document map, key dates, what to read first
+
+2. SPRINT_SUMMARY.txt
+   Purpose: Executive summary, overview
+   Read time: 15 min
+   For: Everyone (orientation)
+   Contains: Big picture, blockers, metrics, go-live gates, team roles
+
+3. README_SPRINT.md
+   Purpose: Practical daily guide
+   Read time: 10 min
+   For: Everyone (daily reference)
+   Contains: Quick start, roles breakdown, daily tracking, red flags
+
+4. DAILY_PRIORITIES.md
+   Purpose: Day-by-day checklist
+   Read time: 15 min (first time), 2 min (daily)
+   For: Everyone (daily standup prep)
+   Contains: Mon-Fri tasks per week, success criteria per day, checklist
+
+5. SPRINT_PLAN.md
+   Purpose: Full 3-week detailed plan
+   Read time: 30 min
+   For: Tech leads, PM
+   Contains: Phases, priorities, checkpoints, dependencies, timeline
+
+6. ARCHITECTURE_DECISIONS.md
+   Purpose: Technical implementation guide
+   Read time: 20 min (by role)
+   For: Backend, Frontend, QA (implementers)
+   Contains: Parser retry, webhook pattern, image generation, tests
+
+7. RISK_REGISTER.md
+   Purpose: Risk management & escalation
+   Read time: 20 min
+   For: Tech leads, PM
+   Contains: 12 risks, probability/impact, mitigation, escalation
+
+8. SUCCESS_METRICS.md
+   Purpose: Performance metrics & go/no-go criteria
+   Read time: 25 min
+   For: QA lead, PM (decision makers)
+   Contains: 18 metrics, targets, measurement methods, launch gates
+
+BONUS DOCUMENTS (2 Support Documents)
+═══════════════════════════════════════════════════════════════════════════════
+
+9. TIMELINE_VISUAL.txt
+   Purpose: Visual ASCII timeline
+   Read time: 5 min
+   For: Everyone (quick reference)
+   Contains: Week-by-week schedule, milestones, resource allocation
+
+10. SETUP_CHECKLIST.md
+    Purpose: Pre-sprint environment setup
+    Read time: 30 min (setup), 5 min (verification)
+    For: Backend, Frontend, QA, DevOps (before Day 1)
+    Contains: Environment setup, team confirmation, first day readiness
+
+═══════════════════════════════════════════════════════════════════════════════
+
+READING ORDER BY ROLE
+═════════════════════════════════════════════════════════════════════════════
+
+EVERYONE (Mandatory, 45 min):
+  1. 00_START_HERE.md (5 min)
+  2. SPRINT_SUMMARY.txt (15 min)
+  3. README_SPRINT.md (10 min)
+  4. TIMELINE_VISUAL.txt (5 min)
+  5. SETUP_CHECKLIST.md (10 min)
+
+BACKEND DEVELOPER (90 min total):
+  + ARCHITECTURE_DECISIONS.md — Parser, Webhook, Risk scoring sections
+  + DAILY_PRIORITIES.md — Find your Week 1 tasks
+  + SPRINT_PLAN.md — Week 1 Backend section
+
+FRONTEND DEVELOPER (90 min total):
+  + ARCHITECTURE_DECISIONS.md — Layout system, Image upload sections
+  + DAILY_PRIORITIES.md — Find your Week 1 tasks
+  + SPRINT_PLAN.md — Week 1 Frontend section
+
+QA / TEST ENGINEER (90 min total):
+  + ARCHITECTURE_DECISIONS.md — Test architecture section
+  + DAILY_PRIORITIES.md — Find your Week 1 tasks
+  + SUCCESS_METRICS.md — Understand what we're measuring
+
+DEVOPS / INFRASTRUCTURE (90 min total):
+  + SETUP_CHECKLIST.md — All sections
+  + SPRINT_PLAN.md — Week 2-3 DevOps sections
+  + RISK_REGISTER.md — Understand deployment risks
+
+PROJECT MANAGER (120 min total):
+  + All 10 documents (skim non-essential sections)
+  + Focus on: Timeline, metrics, risks, daily priorities
+  + Own: SUCCESS_METRICS.md go-live gates
+
+═══════════════════════════════════════════════════════════════════════════════
+
+REFERENCE BY QUESTION
+═════════════════════════════════════════════════════════════════════════════
+
+"What's our timeline?"
+  → TIMELINE_VISUAL.txt or SPRINT_PLAN.md
+
+"What should I do today?"
+  → DAILY_PRIORITIES.md (find current day)
+
+"How do I implement [feature]?"
+  → ARCHITECTURE_DECISIONS.md (find feature section)
+
+"What's our success criteria?"
+  → SUCCESS_METRICS.md or SPRINT_SUMMARY.txt
+
+"What could go wrong?"
+  → RISK_REGISTER.md (top 3 risks)
+
+"Can we launch Friday?"
+  → SUCCESS_METRICS.md (go/no-go gates)
+
+"How do I escalate?"
+  → RISK_REGISTER.md (escalation procedures)
+
+"What's my role?"
+  → README_SPRINT.md (by roles section) or DAILY_PRIORITIES.md
+
+"How do I set up my environment?"
+  → SETUP_CHECKLIST.md
+
+"What's the big picture?"
+  → SPRINT_SUMMARY.txt or 00_START_HERE.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY METRICS (For Sanity Checks)
+═════════════════════════════════════════════════════════════════════════════
+
+PARSER SUCCESS RATE
+  Week 1 target: ≥95%
+  How to check: Daily smoke test (5 Avito listings)
+  Check document: SUCCESS_METRICS.md section 1
+
+FRONTEND LIGHTHOUSE
+  Week 2 target: ≥85
+  How to check: Weekly npm audit
+  Check document: SUCCESS_METRICS.md section 7
+
+E2E TEST FLAKINESS
+  Week 2 target: 0% (100% consistent pass)
+  How to check: CI run history
+  Check document: SPRINT_PLAN.md Week 2 section
+
+ERROR RATE
+  Week 3 target: <0.5%
+  How to check: Prometheus dashboard
+  Check document: SUCCESS_METRICS.md section 4
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CRITICAL DATES (Mark Your Calendar)
+═════════════════════════════════════════════════════════════════════════════
+
+Monday Jun 8, 9:00am UTC
+  → Sprint kickoff standup (15 min)
+  → Start Week 1 tasks
+
+Friday Jun 14, 4:00pm UTC
+  → Week 1 demo
+  → Show: Parser, layout, tests, webhook
+
+Friday Jun 14, 4:30pm UTC
+  → Week 1 retrospective
+
+Wednesday Jun 17, 3:00pm UTC
+  → Mid-sprint review (optional, only if issues)
+
+Friday Jun 21, 4:00pm UTC
+  → Week 2 demo
+
+Friday Jun 28, 10:00am UTC
+  → Go/no-go decision standup
+  → All metrics reviewed
+  → Decision: LAUNCH? or EXTEND?
+
+Friday Jun 28, 2:00pm UTC
+  → Final pre-deploy checklist
+
+Friday Jun 28, 6:00pm UTC
+  → DEPLOY TO PRODUCTION 🚀
+
+═══════════════════════════════════════════════════════════════════════════════
+
+WEEKLY RHYTHM
+═════════════════════════════════════════════════════════════════════════════
+
+DAILY (9:00am UTC, M-F)
+  Meeting: Daily standup (15 min)
+  Slack: Post daily metrics (#sprint-podkapot)
+  Check: DAILY_PRIORITIES.md for today's tasks
+
+FRIDAY (4:00pm + 4:30pm UTC)
+  4:00pm: Demo (15 min)
+  4:30pm: Retrospective (30 min)
+  Slack: Share weekly metrics spreadsheet
+
+WEEK 1 (Jun 8-14)
+  Demo topics: Parser, layout, tests, webhook
+  Success: All Week 1 tasks complete
+
+WEEK 2 (Jun 15-21)
+  Demo topics: Risk scoring, image upload, E2E tests, polish
+  Success: All Week 2 tasks complete
+
+WEEK 3 (Jun 22-28)
+  Demo topics: Load testing, security, documentation, READY TO LAUNCH!
+  Success: All go/no-go gates pass
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ESCALATION PATHS (When Things Go Wrong)
+═════════════════════════════════════════════════════════════════════════════
+
+Level 1: Minor Issue (1 person affected)
+  Channel: #sprint-podkapot thread
+  Escalation: None needed
+  SLA: Same day fix
+  Reference: RISK_REGISTER.md
+
+Level 2: Blocker (2+ people affected)
+  Channel: @backend-lead or @frontend-lead in #sprint-podkapot
+  Escalation: 15-min sync (now)
+  SLA: 2 hours fix
+  Reference: RISK_REGISTER.md
+
+Level 3: Critical (project at risk)
+  Channel: #critical (all hands)
+  Escalation: Emergency standup (now)
+  SLA: 30 min decision
+  Reference: RISK_REGISTER.md
+
+Examples:
+  "Parser success <80%" → Level 3 (critical)
+  "E2E tests flaky >20%" → Level 2 (blocker)
+  "CSS alignment off" → Level 1 (minor)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK REFERENCE CARDS
+═════════════════════════════════════════════════════════════════════════════
+
+DAILY STANDUP SCRIPT (15 min):
+  1. Status (2 min): Done yesterday? Blockers? Today's goal?
+  2. Risk check (1 min): Anything emerging?
+  3. Demo (5 min): Show progress
+  4. Decisions (2 min): What needs approval?
+  5. Assignments (5 min): Who owns what?
+
+GO/NO-GO CHECKLIST (Friday 10am):
+  [ ] Parser ≥95% success
+  [ ] Lighthouse ≥85
+  [ ] E2E 100% pass (no flakes)
+  [ ] Security 0 critical
+  [ ] Team confidence ≥4/5
+  → All pass = DEPLOY! Otherwise adjust scope
+
+RED FLAG CHECKLIST (Check daily):
+  [ ] Parser success <80%? → Escalate
+  [ ] Bundle >150KB? → Escalate
+  [ ] Lighthouse <70? → Escalate
+  [ ] E2E flakes >20%? → Escalate
+  [ ] 2+ people blocked? → Escalate
+  [ ] Security issue found? → Escalate CRITICAL
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FILE LOCATIONS
+═════════════════════════════════════════════════════════════════════════════
+
+All files are in the project root:
+  autorewier/
+  ├── 00_START_HERE.md              ← START HERE!
+  ├── SPRINT_SUMMARY.txt
+  ├── README_SPRINT.md
+  ├── DAILY_PRIORITIES.md
+  ├── SPRINT_PLAN.md
+  ├── ARCHITECTURE_DECISIONS.md
+  ├── RISK_REGISTER.md
+  ├── SUCCESS_METRICS.md
+  ├── TIMELINE_VISUAL.txt
+  ├── SETUP_CHECKLIST.md
+  ├── DOCUMENTS_INDEX.txt           ← YOU ARE HERE
+  │
+  ├── app/                          ← Backend code
+  ├── frontend/                     ← Frontend code
+  ├── tests/                        ← Test code
+  ├── docs/                         ← Additional docs
+  └── ...
+
+═══════════════════════════════════════════════════════════════════════════════
+
+GETTING STARTED (First 10 minutes)
+═════════════════════════════════════════════════════════════════════════════
+
+1. You're reading DOCUMENTS_INDEX.txt ✓
+2. Read: 00_START_HERE.md (5 min)
+3. Read: SPRINT_SUMMARY.txt (5 min)
+4. Next: Read your role section in README_SPRINT.md
+5. Then: Check DAILY_PRIORITIES.md for today's tasks
+6. Setup: Follow SETUP_CHECKLIST.md before Monday
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TOTAL PAGES (For Printing)
+═════════════════════════════════════════════════════════════════════════════
+
+If you need to print these documents:
+  - SPRINT_SUMMARY.txt: ~7 pages
+  - README_SPRINT.md: ~5 pages
+  - DAILY_PRIORITIES.md: ~12 pages
+  - SPRINT_PLAN.md: ~15 pages
+  - ARCHITECTURE_DECISIONS.md: ~12 pages
+  - RISK_REGISTER.md: ~13 pages
+  - SUCCESS_METRICS.md: ~20 pages
+  - TIMELINE_VISUAL.txt: ~3 pages
+  - SETUP_CHECKLIST.md: ~8 pages
+  - DOCUMENTS_INDEX.txt: ~3 pages
+
+  TOTAL: ~98 pages (but you don't need to print all!)
+
+  Recommended to print:
+    - TIMELINE_VISUAL.txt (post on wall)
+    - DAILY_PRIORITIES.md (weekly)
+    - SUCCESS_METRICS.md go-live section (Friday Week 3)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FINAL CHECKLIST
+═════════════════════════════════════════════════════════════════════════════════
+
+Before starting sprint:
+  [ ] Read 00_START_HERE.md
+  [ ] Read SPRINT_SUMMARY.txt
+  [ ] Read README_SPRINT.md
+  [ ] Read your role tasks in DAILY_PRIORITIES.md
+  [ ] Do SETUP_CHECKLIST.md (environment setup)
+  [ ] Join #sprint-podkapot Slack channel
+  [ ] Add daily standup to calendar (9:00am UTC, M-F)
+  [ ] Bookmark these documents
+  [ ] Ask questions in Slack
+  [ ] Show up Monday 9:00am ready to go
+
+═════════════════════════════════════════════════════════════════════════════
+
+Questions about which document to read?
+
+  1. UNSURE? → Read 00_START_HERE.md
+  2. CONFUSED? → Read SPRINT_SUMMARY.txt
+  3. LOST? → Read README_SPRINT.md
+  4. SPECIFIC QUESTION? → Use "REFERENCE BY QUESTION" section above
+  5. STILL UNSURE? → Ask in #sprint-podkapot on Slack!
+
+═════════════════════════════════════════════════════════════════════════════
+
+Document prepared by: Architect
+Date: June 8, 2026
+Status: READY FOR EXECUTION
+
+Sprint starts Monday 9:00 AM UTC
+Let's launch this MVP! 🚀
+
+═════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,17 @@
+.git
+.gitignore
+.cursor
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+frontend/node_modules
+
+data/cache
+data/avito_browser_profile
+
+tests
+docs
+agent-transcripts

@@ -1,0 +1,490 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║         ПОДКАПОТ: ПОЛНЫЙ СПРИНТ-ПЛАН (3 НЕДЕЛИ, 8-28 ИЮНЯ 2026)              ║
+║                          EXECUTIVE SUMMARY                                     ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+ПРОЕКТ: ПОДКАПОТ (B2C сервис проверки авто перед покупкой)
+ПЕРИОД: 8-28 июня 2026 (3 недели, 54 story points)
+ЦЕЛЬ: Запустить MVP с интеграцией Avito, риск-скорингом, полным регрессионным тестированием
+КРИТИЧНЫЕ СРОКИ: Запуск Friday June 28, 2026
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ОСНОВНОЙ ПЛАН
+─────────────────────────────────────────────────────────────────────────────
+
+НЕДЕЛЯ 1: ФУНДАМЕНТ (8-14 июня)
+  Backend:   Parser retry + captcha detection, placeholder images, webhook endpoint
+  Frontend:  CSS audit, design system vars, custom checkbox, mobile testing
+  QA:        Fixtures setup, API regression tests (23 endpoints)
+  Success:   Parser ≥95%, no layout bugs, webhook working
+
+НЕДЕЛЯ 2: ИНТЕГРАЦИЯ (15-21 июня)
+  Backend:   Risk scoring (correlation >0.65), PDF async, LLM optimization
+  Frontend:  Professional design, image upload + fallback, mobile optimization
+  QA:        E2E tests (3 scenarios), data validation, CI/CD setup
+  Success:   Risk scoring validated, image upload works, Lighthouse ≥75
+
+НЕДЕЛЯ 3: ЗАПУСК (22-28 июня)
+  Backend:   Observability (Prometheus), documentation, security audit
+  Frontend:  Performance optimization (<150KB bundle), A11y (WCAG AA)
+  QA:        Load testing, security testing, full regression (100% pass)
+  Success:   Load test p95 <1s, security 0 critical, LAUNCH! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ДОКУМЕНТАЦИЯ
+─────────────────────────────────────────────────────────────────────────────
+
+1. README_SPRINT.md (краткая справка 5 минут чтения)
+   → Что делать сегодня, по ролям, метрики, quick reference
+
+2. SPRINT_PLAN.md (полный план 3 недели)
+   → Детальный разбор по дням, приоритеты, фазы, контрольные точки
+
+3. DAILY_PRIORITIES.md (день-за-днём checklist)
+   → Каждый день (ПН-ПТ) по неделям, конкретные задачи
+
+4. ARCHITECTURE_DECISIONS.md (технические решения)
+   → Как реализовать: parser retry, webhook, image generation, tests
+
+5. RISK_REGISTER.md (12 рисков + mitigation)
+   → Что может пойти не так, план B, escalation procedures
+
+6. SUCCESS_METRICS.md (18 метрик + go/no-go)
+   → Как измерить успех, целевые значения, критерии запуска
+
+7. TIMELINE_VISUAL.txt (визуальный график)
+   → ASCII timeline, risk hotspots, team allocation, go-live gates
+
+8. SPRINT_SUMMARY.txt (этот файл)
+   → Executive summary + быстрые ссылки
+
+═══════════════════════════════════════════════════════════════════════════════
+
+КРИТИЧНЫЕ БЛОКЕРЫ (Решить в Day 1)
+─────────────────────────────────────────────────────────────────────────────
+
+1. AVITO PARSER BLOCKING (Risk: HIGH)
+   Problem: Captcha, rate limiting, blocked IP
+   Solution: Retry logic (3-5 attempts) + captcha detection + graceful degradation
+   Deadline: Jun 8
+   Owner: Backend Lead
+   → Details in ARCHITECTURE_DECISIONS.md
+
+2. FRONTEND LAYOUT BROKEN (Risk: HIGH)
+   Problem: Emoji in forms, font size <12px, no mobile optimization
+   Solution: CSS audit, design-system.css, custom checkbox, 320px testing
+   Deadline: Jun 10
+   Owner: Frontend Lead
+   → Checklist in DAILY_PRIORITIES.md (Jun 8-10)
+
+3. NO REGRESSION TESTS (Risk: MEDIUM)
+   Problem: Only E2E tests exist, no API contracts, no data validation
+   Solution: Create fixtures, 23+ API regression tests, parser validation
+   Deadline: Jun 11
+   Owner: QA Lead
+   → Details in ARCHITECTURE_DECISIONS.md
+
+4. WEBHOOK NOT WORKING (Risk: MEDIUM)
+   Problem: No endpoint for external status updates
+   Solution: Webhook receiver + signature verification + Redis queue
+   Deadline: Jun 11
+   Owner: Backend Lead
+   → Implementation guide in ARCHITECTURE_DECISIONS.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+РИСКИ & MITIGATION
+─────────────────────────────────────────────────────────────────────────────
+
+Top 3 Critical Risks:
+
+1. Parser Rate Limiting / Blocking
+   Probability: HIGH (80%)  Impact: HIGH (60%)
+   Mitigation: Exponential backoff, proxy rotation, captcha detection
+   Contingency: Selenium + headless browser OR manual URL input
+   → Full strategy in RISK_REGISTER.md
+
+2. Database Migration Failure
+   Probability: MEDIUM (30%)  Impact: CRITICAL (100%)
+   Mitigation: Test locally, rollback script, backup before deploy
+   Contingency: pg_restore from backup
+   → Full strategy in RISK_REGISTER.md
+
+3. LLM API Costs > Budget
+   Probability: MEDIUM (40%)  Impact: HIGH (30%)
+   Mitigation: Token counting, response caching, rule-based fallback
+   Contingency: Disable LLM for free tier, cheaper model
+   → Full strategy in RISK_REGISTER.md
+
+All 12 risks documented in RISK_REGISTER.md with escalation procedures.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+SUCCESS METRICS (WHAT WE'RE MEASURING)
+─────────────────────────────────────────────────────────────────────────────
+
+BACKEND (6 metrics):
+  ✓ Parser success rate: ≥95% (daily monitoring)
+  ✓ Parsing latency p95: <5 seconds
+  ✓ Risk score correlation: >0.70 (vs user verdict)
+  ✓ Error rate: <0.5% (production monitoring)
+  ✓ Webhook delivery: 99.9% (with retries)
+  ✓ Database health: 0 constraint violations
+
+FRONTEND (6 metrics):
+  ✓ Lighthouse mobile: ≥85 (weekly audit)
+  ✓ LCP: <2.5 seconds (Core Web Vitals)
+  ✓ Bundle size: <150KB gzip
+  ✓ Mobile viewports: 100% correct (320px-1920px)
+  ✓ Accessibility: axe audit <3 issues (minor only)
+  ✓ Component accessibility: WCAG AA compliant
+
+TESTING (3 metrics):
+  ✓ Test coverage: ≥80% critical paths
+  ✓ E2E pass rate: 100% (no flakes)
+  ✓ Regression suite: 100% pass
+
+OPERATIONS (3 metrics):
+  ✓ Deployment success: 100% (no rollbacks)
+  ✓ Monitoring alerts: All configured
+  ✓ Documentation: Complete & reviewed
+
+→ Full metrics dashboard in SUCCESS_METRICS.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+GO/NO-GO DECISION GATES (Friday 10am, Week 3)
+─────────────────────────────────────────────────────────────────────────────
+
+Launch is GO IF ALL these pass:
+
+Functionality ✓
+  [ ] Parser success rate ≥95%
+  [ ] Risk scoring correlation ≥0.70
+  [ ] Webhook delivery 99.9%
+  [ ] PDF reports <5s generation
+  [ ] Image upload + fallback working
+
+Quality ✓
+  [ ] API regression tests 100% pass
+  [ ] E2E tests (3 scenarios) 100% pass, no flakes
+  [ ] Security audit: 0 critical issues
+  [ ] Code coverage ≥80% critical paths
+
+Performance ✓
+  [ ] Lighthouse mobile ≥85
+  [ ] LCP <2.5 seconds
+  [ ] Bundle <150KB gzip
+  [ ] Load test p95 <1s @ 10 concurrent
+
+Operations ✓
+  [ ] Monitoring alerts configured
+  [ ] Deployment runbook written & tested
+  [ ] Backups working
+  [ ] Team trained on procedures
+
+Business ✓
+  [ ] Product owner approval
+  [ ] Stakeholder sign-off
+  [ ] Support team ready
+  [ ] Launch communication plan ready
+
+IF ANY GATE FAILS:
+  Option A: Launch with limitations (beta tag)
+  Option B: Extend sprint 1 week
+  Option C: Defer features to v1.1
+
+→ Full go-live checklist in SUCCESS_METRICS.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TEAM ROLES & RESPONSIBILITIES
+─────────────────────────────────────────────────────────────────────────────
+
+BACKEND DEVELOPER (1 dev, 54% time)
+  Week 1: Parser retry, placeholder images, webhook endpoint, API tests
+  Week 2: Risk scoring, async PDF, LLM optimization
+  Week 3: Observability, API docs, security audit
+  → Checklist in DAILY_PRIORITIES.md
+
+FRONTEND DEVELOPER (1 dev, 54% time)
+  Week 1: Layout audit, design-system CSS, checkbox, mobile testing
+  Week 2: Polish design, image upload, Lighthouse optimization
+  Week 3: Performance, A11y, bundle optimization
+  → Checklist in DAILY_PRIORITIES.md
+
+QA / TEST ENGINEER (1 dev, 40% time)
+  Week 1: Fixtures, regression tests, parser tests
+  Week 2: E2E tests (3 scenarios), data validation
+  Week 3: Load testing, security testing, full regression
+  → Checklist in DAILY_PRIORITIES.md
+
+DEVOPS / INFRASTRUCTURE (1 dev, 30% time)
+  Week 1: Docker setup, .env template, health checks
+  Week 2: GitHub Actions, pre-commit hooks, staging
+  Week 3: Monitoring, deployment runbook, go-live prep
+  → Checklist in DAILY_PRIORITIES.md
+
+PROJECT MANAGER (1 person, 100% time)
+  Daily: Standups, blockers, velocity tracking
+  Weekly: Demo (Friday 4pm), retro (4:30pm)
+  Week 3: Go/no-go decision, launch coordination
+  → Full schedule in README_SPRINT.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+DAILY STANDUP FORMAT (15 minutes, 9:00 UTC)
+─────────────────────────────────────────────────────────────────────────────
+
+1. Status (2 min)
+   - What was done yesterday?
+   - What are blockers?
+   - What's today's goal?
+
+2. Risk Check (1 min)
+   - Anything emerging?
+   - Do we need escalation?
+
+3. Demo (5 min)
+   - Show progress (even if incomplete)
+
+4. Decisions (2 min)
+   - Anything need approval?
+
+5. Assignments (5 min)
+   - Who owns what today?
+
+→ Template in DAILY_PRIORITIES.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+WEEKLY RHYTHM
+─────────────────────────────────────────────────────────────────────────────
+
+Monday 9:00am  → Standup (sprint kick)
+Tue-Thu 9:00am → Daily standup
+Friday 9:00am  → Final standup
+Friday 4:00pm  → Demo (15 min)
+Friday 4:30pm  → Retrospective (30 min)
+
+Extra meetings:
+  Wed 3:00pm (Week 2): Mid-sprint review
+  Friday 10:00am (Week 3): Go/no-go decision
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ESCALATION PROCEDURES
+─────────────────────────────────────────────────────────────────────────────
+
+Level 1: Minor Issue (1 person affected)
+  → Slack thread in #sprint-podkapot
+  → Owner: responsible dev
+  → SLA: Same day fix
+
+Level 2: Blocker (2+ people affected)
+  → Slack mention + 15min sync
+  → Owner: team lead
+  → SLA: 2 hours fix
+
+Level 3: Critical (project at risk)
+  → Emergency all-hands
+  → Decision: PM + tech lead
+  → SLA: 30 min decision
+
+Example: "Parser success <80% for 2 hours"
+  → Escalate to backend lead + PM
+  → Emergency decision needed within 30 min
+  → Possible outcomes:
+     A) Additional retry strategy
+     B) Switch to Selenium/headless browser
+     C) Enable manual URL input fallback
+     D) Defer Avito integration to v1.1
+
+→ Full escalation matrix in RISK_REGISTER.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+VELOCITY & CONTINGENCY
+─────────────────────────────────────────────────────────────────────────────
+
+Expected Story Points:
+  Week 1: 21 points (foundation, critical)
+  Week 2: 18 points (integration, quality)
+  Week 3: 15 points (polish, launch)
+  TOTAL:  54 points
+
+Contingency:
+  Time reserve: 3 days (included in Week 3)
+  Feature reserve: 3 nice-to-haves that can be deferred:
+    - Dark mode
+    - Advanced analytics
+    - Model-specific checklists v2
+
+If running behind (velocity <70%):
+  1. Defer nice-to-haves
+  2. Reduce E2E test coverage (keep critical flows)
+  3. Extend sprint by 3-7 days if needed
+  4. PM makes scope decision
+
+═══════════════════════════════════════════════════════════════════════════════
+
+COMMUNICATION CHANNELS
+─────────────────────────────────────────────────────────────────────────────
+
+Slack:
+  #sprint-podkapot    → Daily updates, blockers, questions
+  #critical           → Emergency escalations only
+
+Standups:
+  Daily 9:00 UTC      → 15 min team sync
+
+Demos:
+  Friday 4:00pm       → 15 min progress show
+  Attendees: all team + stakeholders
+
+Retro:
+  Friday 4:30pm       → 30 min lessons learned
+  Attendees: all team
+
+Documents:
+  Git repo            → All sprint docs committed
+  Shared folder       → Metrics spreadsheet (weekly)
+  Confluence (opt)    → Architecture decisions
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NEXT STEPS (DO THIS NOW)
+─────────────────────────────────────────────────────────────────────────────
+
+1. [EVERYONE] Read README_SPRINT.md (5 min)
+   → Understand the big picture
+
+2. [BY ROLE] Read relevant section in DAILY_PRIORITIES.md
+   → Backend: Jun 8 Backend tasks
+   → Frontend: Jun 8 Frontend tasks
+   → QA: Jun 8 QA tasks
+   → DevOps: Jun 8 DevOps tasks
+   → PM: Jun 8 PM tasks
+
+3. [TECH LEADS] Review ARCHITECTURE_DECISIONS.md
+   → Understand implementation patterns
+
+4. [ALL] Review RISK_REGISTER.md
+   → Know top 3 risks and how to escalate
+
+5. [PM] Review SUCCESS_METRICS.md
+   → Understand go/no-go gates
+
+6. [ALL] Add to calendar:
+   → Daily standup 9:00 UTC (every weekday)
+   → Friday demo 4:00pm
+   → Friday retro 4:30pm
+
+7. [MONDAY MORNING] Kickoff standup
+   → Confirm understanding
+   → Ask questions
+   → START SPRINT!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK LINKS
+─────────────────────────────────────────────────────────────────────────────
+
+Start here:
+  README_SPRINT.md        ← Read first (5 min)
+  TIMELINE_VISUAL.txt     ← Visual overview
+
+For planning:
+  SPRINT_PLAN.md          ← Full 3-week plan
+  DAILY_PRIORITIES.md     ← Day-by-day checklist
+
+For execution:
+  ARCHITECTURE_DECISIONS.md  ← How to implement
+  SUCCESS_METRICS.md         ← How to measure
+
+For risk management:
+  RISK_REGISTER.md        ← 12 risks + mitigation
+  SPRINT_SUMMARY.txt      ← This file
+
+═══════════════════════════════════════════════════════════════════════════════
+
+LAUNCH VISION
+─────────────────────────────────────────────────────────────────────────────
+
+Friday June 28, 2026, 2:00 PM:
+  Product owner: "All green, we're good to launch"
+  Team: "Confirmed, let's do this!"
+
+Friday June 28, 6:00 PM:
+  DEPLOY TO PRODUCTION 🚀
+  Monitoring live, all alerts active
+  Team on standby
+
+Saturday June 29, 9:00 AM:
+  First users registering
+  First inspections being created
+  First reports being generated
+  All metrics green ✓
+
+By July 15, 2026:
+  100+ real inspections in production
+  Users are happy (4+ star reviews)
+  Team confident in platform
+  MVP = SUCCESS!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FINAL CHECKLIST BEFORE LAUNCH
+─────────────────────────────────────────────────────────────────────────────
+
+[ ] All documentation reviewed by team
+[ ] Roles and responsibilities understood
+[ ] Daily standup time confirmed (9:00 UTC)
+[ ] Slack channel ready (#sprint-podkapot)
+[ ] Calendar events created (standups, demo, retro)
+[ ] Git repos cloned and ready
+[ ] .env files configured locally
+[ ] Docker images built and tested
+[ ] First day tasks clearly assigned
+[ ] Product owner available for decisions
+[ ] Escalation contacts known
+[ ] Team confidence high (4+/5)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUESTIONS?
+─────────────────────────────────────────────────────────────────────────────
+
+Before starting:
+  → Check DAILY_PRIORITIES.md for your role's Day 1 tasks
+  → Check README_SPRINT.md "Who to Contact" section
+  → Ask in #sprint-podkapot on Slack
+
+During sprint:
+  → Escalate via procedures in RISK_REGISTER.md
+  → Update metrics in SUCCESS_METRICS.md
+  → Check TIMELINE_VISUAL.txt for milestones
+
+After sprint:
+  → Celebrate! 🎉
+  → Retrospective: What did we learn?
+  → Plan v1.1: What's next?
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                    SPRINT OFFICIALLY STARTS
+                        MONDAY JUNE 8, 9:00 AM UTC
+
+                       LET'S SHIP THIS MVP! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Document prepared by: Architect
+Created: June 8, 2026
+Status: READY FOR EXECUTION
+Last updated: -
+
+All team members should review this summary before Day 1.
+Bookmark DAILY_PRIORITIES.md for daily reference.

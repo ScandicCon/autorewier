@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "python .cursor/hooks/inject_subagent_skills.py",
+        "matcher": "Task",
+        "failClosed": false
+      }
+    ]
+  }
+}

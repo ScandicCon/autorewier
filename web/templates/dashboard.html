@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Кабинет — AutoRewier{% endblock %}
+
+{% block content %}
+
+<!-- Шапка страницы -->
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Личный кабинет</p>
+    <h1>История проверок</h1>
+    <p class="muted" style="margin:0">Сравнивайте сделки по рискам, бюджету ремонта и итоговому вердикту.</p>
+  </div>
+
+  <div class="page-head-actions">
+    {% if can_create %}
+      <a href="/cabinet/new" class="btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Новая проверка
+      </a>
+    {% else %}
+      <span class="badge warn">{{ limit_msg }}</span>
+      <a href="/cabinet/subscription" class="btn btn-outline">Получить Pro</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Email не подтверждён -->
+{% if user and user.email_verified is defined and not user.email_verified %}
+<div class="alert alert-warn" style="margin-bottom:1.5rem" role="alert">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <div>
+    <strong>Подтвердите email для полной активации кабинета.</strong>
+    <p style="margin:0.3rem 0 0;font-size:0.88rem;opacity:0.85">Откройте письмо с кодом и завершите верификацию.</p>
+  </div>
+</div>
+{% endif %}
+
+{% if not inspections %}
+
+<!-- ====== ПУСТОЕ СОСТОЯНИЕ ====== -->
+<div class="empty-state">
+  <div class="empty-icon" aria-hidden="true">🚗</div>
+  <h2>Ещё нет проверок</h2>
+  <p>
+    Создайте первую проверку — вставьте ссылку на объявление с Avito, Auto.ru или Дром,
+    и получите полный анализ за несколько минут.
+  </p>
+  <a href="/cabinet/new" class="btn btn-lg">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    Создать первую проверку
+  </a>
+
+  <!-- Подсказки что будет в проверке -->
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0.85rem;
+    margin-top:3rem;
+    text-align:left;
+  ">
+    <div style="
+      background:var(--bg-card);
+      border:1px solid var(--line);
+      border-radius:var(--r-lg);
+      padding:1.1rem;
+    ">
+      <div style="font-size:1.4rem;margin-bottom:0.6rem">⚠️</div>
+      <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.3rem">Анализ рисков</div>
+      <div style="font-size:0.82rem;color:var(--muted)">Скрытые проблемы по описанию</div>
+    </div>
+    <div style="
+      background:var(--bg-card);
+      border:1px solid var(--line);
+      border-radius:var(--r-lg);
+      padding:1.1rem;
+    ">
+      <div style="font-size:1.4rem;margin-bottom:0.6rem">🔧</div>
+      <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.3rem">Цены ремонта</div>
+      <div style="font-size:0.82rem;color:var(--muted)">Реальные данные с Авито</div>
+    </div>
+    <div style="
+      background:var(--bg-card);
+      border:1px solid var(--line);
+      border-radius:var(--r-lg);
+      padding:1.1rem;
+    ">
+      <div style="font-size:1.4rem;margin-bottom:0.6rem">💬</div>
+      <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.3rem">Торг с продавцом</div>
+      <div style="font-size:0.82rem;color:var(--muted)">Готовые аргументы с суммами</div>
+    </div>
+  </div>
+
+</div>
+
+{% else %}
+
+<!-- ====== БЛОК СРАВНЕНИЯ ====== -->
+{% if inspections|length >= 2 %}
+<div style="
+  background:linear-gradient(135deg,rgba(20,40,70,0.7),rgba(8,18,35,0.7));
+  border:1px solid rgba(58,180,255,0.2);
+  border-radius:var(--r-lg);
+  padding:1rem 1.3rem;
+  margin-bottom:1.5rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:0.75rem;
+" role="region" aria-label="Сравнение автомобилей">
+  <div>
+    <span style="font-size:0.9rem;color:var(--text-soft)">
+      <strong style="color:var(--accent)">Сравнить авто:</strong>
+      выберите 2–3 проверки галочкой
+    </span>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.75rem">
+    <span id="compare-count-label" style="font-size:0.88rem;color:var(--muted)">
+      Выбрано: <span id="compare-count">0</span>
+    </span>
+    <button id="compare-btn" class="btn btn-sm btn-outline" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Сравнить
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<!-- ====== СЕТКА ПРОВЕРОК ====== -->
+<div class="history-grid">
+  {% for i in inspections %}
+    {% set rep = i.post_report or i.pre_report or {} %}
+    <article class="history-card">
+
+      <div class="history-card-head">
+        <div style="display:flex;align-items:center;gap:0.6rem">
+          <!-- Чекбокс сравнения -->
+          {% if inspections|length >= 2 %}
+          <input
+            type="checkbox"
+            data-compare-checkbox="{{ i.id }}"
+            id="compare-{{ i.id }}"
+            aria-label="Выбрать для сравнения {{ i.brand or '' }} {{ i.model or '' }}"
+            style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent)"
+          >
+          {% endif %}
+          <a class="card-link" href="/cabinet/inspection/{{ i.id }}">#{{ i.id }}</a>
+        </div>
+        <span class="verdict {{ i.verdict.value if i.verdict else '' }}">
+          {{ rep.verdict_label if rep and rep.verdict_label else (i.verdict.value if i.verdict else '—') }}
+        </span>
+      </div>
+
+      <h3>{{ i.brand or '?' }} {{ i.model or '' }} {{ i.year or '' }}</h3>
+      <p class="muted small" style="margin:0 0 0.8rem">
+        Создано {{ i.created_at.strftime('%d.%m.%Y') }}
+      </p>
+
+      <div class="mini-stats">
+        <p>
+          <span class="muted">Цена</span>
+          <strong>{% if i.price_rub %}{{ '{:,}'.format(i.price_rub).replace(',', ' ') }} ₽{% else %}—{% endif %}</strong>
+        </p>
+        <p>
+          <span class="muted">Ремонт</span>
+          <strong>{% if i.repair_max_rub %}до {{ '{:,}'.format(i.repair_max_rub).replace(',', ' ') }} ₽{% else %}—{% endif %}</strong>
+        </p>
+        <p>
+          <span class="muted">Риски</span>
+          <strong>{{ (rep.risks or [])|length if rep else 0 }}</strong>
+        </p>
+      </div>
+
+      <div class="history-card-actions">
+        <a href="/cabinet/inspection/{{ i.id }}" class="btn btn-sm btn-outline">Открыть отчёт</a>
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          style="font-size:0.82rem"
+          onclick="window.location.href='/cabinet/new?monitor={{ i.id }}'"
+          title="Добавить мониторинг цены"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          Мониторинг
+        </button>
+      </div>
+
+    </article>
+  {% endfor %}
+</div>
+
+<!-- Sticky бар сравнения -->
+<div id="compare-bar" class="compare-bar" role="region" aria-live="polite" aria-label="Панель сравнения">
+  <p class="compare-bar-label" style="margin:0">
+    Выбрано авто: <span id="compare-count">0</span>
+    <span style="color:var(--muted);font-size:0.85rem;margin-left:0.5rem">(выберите от 2 до 3)</span>
+  </p>
+  <div style="display:flex;gap:0.75rem">
+    <button
+      class="btn btn-sm btn-ghost"
+      onclick="document.querySelectorAll('[data-compare-checkbox]').forEach(cb => { cb.checked = false; cb.disabled = false; }); document.getElementById('compare-bar').classList.remove('visible'); document.getElementById('compare-count').textContent = '0';"
+    >Сбросить</button>
+    <button id="compare-btn" class="btn btn-sm" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Сравнить
+    </button>
+  </div>
+</div>
+
+{% endif %}
+
+{% endblock %}

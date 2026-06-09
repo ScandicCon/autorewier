@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Новая проверка — данные{% endblock %}
+{% block content %}
+<section class="flow-intro">
+  <div>
+    <h1>{% if from_avito %}Проверьте данные объявления{% else %}Заполните параметры автомобиля{% endif %}</h1>
+    <p class="muted">Сформируйте ввод для предварительного отчёта: чем точнее симптомы и контекст, тем полезнее риски, чеклист и расчёт ремонта.</p>
+  </div>
+  <ol class="stage-track">
+    <li class="active">Лот и параметры</li>
+    <li>Предварительные риски</li>
+    <li>Осмотр и находки</li>
+    <li>Финальный вывод</li>
+  </ol>
+</section>
+
+{% if parse_warning %}<p class="error">{{ parse_warning }}</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if from_avito and not parse_warning %}
+<p class="success">Объявление загружено. Дополните симптомы, фото и приоритеты перед запуском анализа.</p>
+{% endif %}
+
+<form method="post" action="/cabinet/new" class="flow-form">
+  <input type="hidden" name="from_avito" value="{{ '1' if from_avito else '' }}">
+  <input type="hidden" name="avito_loaded" value="{{ '1' if avito_loaded else '' }}">
+
+  <section class="card">
+    <h2>1. Лот и базовые параметры</h2>
+    <div class="form-grid">
+      <label class="full">Ссылка на объявление
+        <input type="url" name="listing_url" value="{{ listing_url or '' }}" {% if from_avito %}readonly{% endif %} placeholder="https://...">
+      </label>
+      <label>Марка<input name="brand" value="{{ brand or '' }}" {% if not manual %}required{% endif %}></label>
+      <label>Модель<input name="model" value="{{ model or '' }}"></label>
+      <label>Год<input name="year" value="{{ year or '' }}" inputmode="numeric"></label>
+      <label>Пробег, км<input name="mileage_km" value="{{ mileage_km or '' }}" inputmode="numeric"></label>
+      <label>Цена, ₽<input name="price_rub" value="{{ price_rub or '' }}" inputmode="numeric"></label>
+      <label>VIN<input name="vin" value="{{ vin or '' }}" maxlength="17"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2. Контекст покупки и ожидания</h2>
+    <div class="form-grid">
+      <label class="full"><strong>Ваши требования</strong>
+        <textarea name="user_preferences" rows="3" placeholder="Например: только автомат, без серьёзных кузовных работ, один владелец...">{{ user_preferences or '' }}</textarea>
+      </label>
+      <label class="full"><strong>Описание продавца / комментарии по лоту</strong>
+        <textarea name="seller_description" rows="7" placeholder="Полный текст объявления, особенности состояния, что уже меняли...">{{ seller_description or '' }}</textarea>
+        <span class="muted small">Текст из объявления можно править: анализ учитывает итоговую версию этого блока.</span>
+      </label>
+      <label class="full"><strong>Заявленные работы и ТО</strong>
+        <textarea name="listing_repairs" rows="4" placeholder="масло+фильтры, стойки, ремень, тормозные диски...">{{ listing_repairs or '' }}</textarea>
+      </label>
+      <label class="check"><input type="checkbox" name="is_reseller"> Режим перепродажи</label>
+      <label>Целевая цена перепродажи, ₽<input name="target_resale_price" inputmode="numeric"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2>3. Видимые дефекты и фото-заметки</h2>
+      <button type="button" class="btn btn-sm btn-outline" data-add-finding="pre">+ Добавить дефект</button>
+    </div>
+    <p class="muted small">Заполняйте то, что видно по фото/описанию. Поля с фото работают как metadata-only: ссылки и заметки будут добавлены в анализ как текст.</p>
+    <div class="finding-list" data-finding-list="pre"></div>
+
+    <label class="full"><strong>Сводный текст дефектов</strong>
+      <textarea
+        name="pre_defects"
+        rows="6"
+        data-aggregate-target="pre"
+        placeholder="Свободная форма: сколы, неравномерные зазоры, дым, подтёки, ошибки на приборке...">{{ pre_defects or '' }}</textarea>
+      <span class="muted small">Эта область обязательна для совместимости. При добавлении карточек выше текст будет дополнен автоматически перед отправкой.</span>
+    </label>
+  </section>
+
+  <section class="card decision-card">
+    <h2>4. Что получите сразу после отправки</h2>
+    <ul class="feature-list compact">
+      <li>Предварительный риск-профиль с видимым recommendation badge.</li>
+      <li>Персональный чеклист осмотра с практическими "как проверить".</li>
+      <li>Оценку ремонта, маржинальности и итоговый вердикт.</li>
+    </ul>
+    <button type="submit" class="btn">Построить предварительный отчёт</button>
+  </section>
+</form>
+{% endblock %}

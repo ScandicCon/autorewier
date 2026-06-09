@@ -1,0 +1,230 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                    ПОДКАПОТ СПРИНТ: ВИЗУАЛЬНЫЙ TIMELINE                       ║
+║                              8-28 ИЮНЯ 2026                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                          НЕДЕЛЯ 1: ФУНДАМЕНТ
+                        (Jun 8-14, 21 story points)
+
+    пн 8      вт 9      ср 10     чт 11     пт 12
+    ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
+    │Parse│ │  CSS│ │Check│ │Webhook
+  B │Retry│ │Audit│ │box  │ │Endpoint
+  E │Logo │ │+-   │ │Styling
+  C │Capt.│ │Font │ │+
+  K │Detc │ │Vars │ │Test
+    └─────┘ └─────┘ └─────┘ └─────┘ └─────┘
+      ▼       ▼       ▼       ▼       ▼
+    ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
+  F │  CSS│ │Mobile│ │Image│ │Image│ │Polish
+  E │Vars │ │  Test│ │Upload│ │Fallback│ +Demo
+  C │Creat│ │320px │ │UI   │ │      │
+    └─────┘ └─────┘ └─────┘ └─────┘ └─────┘
+      ▼       ▼       ▼       ▼       ▼
+    ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
+  Q │Fix  │ │Regress│ │Data │ │Webhook│ │Sprint
+  A │Fixtures│ │Tests│ │Validation│ │Tests  │ │Review
+    │     │ │Setup │ │Tests│ │     │ │Retro
+    └─────┘ └─────┘ └─────┘ └─────┘ └─────┘
+
+    ✓ Parser retry: ≥95% success
+    ✓ Layout audit: all text ≥14px
+    ✓ Placeholder images: <100ms
+    ✓ API regression: 100% pass
+    ✓ Webhook: endpoint working
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        НЕДЕЛЯ 2: ИНТЕГРАЦИЯ
+                      (Jun 15-21, 18 story points)
+
+    пн 15     вт 16     ср 17     чт 18     пт 19
+    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  B │Risk  │ │ PDF  │ │LLM   │ │ Risk │ │Observ
+  E │Scoring│ │Async │ │Polish│ │Test  │ │-ability
+  C │Algo  │ │Gen  │ │+ Cost│ │      │ │Setup
+  K │      │ │      │ │Count │ │      │ │
+    └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+      ▼       ▼       ▼       ▼       ▼
+    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  F │Polish│ │Upload│ │ Image│ │Mobile│ │CI/CD
+  E │Design│ │Drag& │ │ Fallback│ │ Opt  │ │Setup
+  C │No AI │ │Drop  │ │Design │ │LightH│ │
+    │      │ │+Fallb│ │Polish │ │>80   │ │
+    └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+      ▼       ▼       ▼       ▼       ▼
+    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  Q │Risk  │ │E2E   │ │E2E   │ │E2E   │ │CI/CD
+  A │Scoring│ │Scen 1│ │Scen 2│ │Scen 3│ │Tests
+    │Tests │ │Reg+  │ │Login │ │Webhook│ │Pass
+    │      │ │Login │ │+ JWT │ │ +Sign│ │
+    └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+
+    ✓ Risk scoring: ≥0.65 correlation
+    ✓ PDF async: <5s generation
+    ✓ Image upload: fallback working
+    ✓ E2E tests: 100% pass, no flakes
+    ✓ CI/CD pipeline: green
+    ✓ Lighthouse: ≥75 mobile
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                      НЕДЕЛЯ 3: ЗАПУСК & POLISH
+                      (Jun 22-28, 15 story points)
+
+    пн 22     вт 23     ср 24     чт 25     пт 26
+    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  B │Load  │ │Secur │ │ API  │ │Observ │ │LAUNCH!
+  E │Test  │ │Audit │ │Docs  │ │Alerts │ │ ✓
+  C │p95<1s│ │OWASP │ │Swagger│ │Config │ │
+  K │10cc  │ │      │ │     │ │      │ │Production
+    └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+      ▼       ▼       ▼       ▼       ▼
+    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  F │Performance│ │A11y  │ │Bundle│ │Smoke│ │Monitor
+  E │optim │ │WCAG  │ │<150KB│ │Tests │ │24/7
+  C │LCP<2.5│ │axe<3 │ │gzip │ │     │ │
+    │      │ │      │ │     │ │     │ │
+    └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+      ▼       ▼       ▼       ▼       ▼
+    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  Q │Stress│ │Secur │ │FULL  │ │Go/   │ │POST-
+  A │Test  │ │Audit │ │Regr. │ │NO-GO │ │Launch
+    │p50u  │ │Issues│ │Tests │ │Check │ │Support
+    │sers  │ │      │ │100% ✓│ │      │ │
+    └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
+
+    ✓ Load test: p95 <1s @ 10 concurrent
+    ✓ Security: 0 critical issues
+    ✓ Full regression: 100% pass
+    ✓ Go-live checklist: complete
+    ✓ PRODUCTION LIVE!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                          DAILY STANDUP TIMES
+                            09:00 UTC (adjustable)
+
+                          WEEKLY DEMO: FRIDAY 4pm
+                        RETROSPECTIVE: FRIDAY 4:30pm
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                         RISK HOTSPOTS (Watch!)
+
+  Week 1: Parser blocking (Avito) ⚠️
+          → Mitigation: Retry + captcha detection ready
+
+  Week 2: E2E test flakiness ⚠️
+          → Mitigation: Explicit waits, mock services
+
+  Week 3: Database migration failure ⚠️
+          → Mitigation: Test locally, backup ready
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        GO/NO-GO DECISION GATES
+
+  ┌─────────────────────────────────────────┐
+  │ FRIDAY WEEK 3, 10:00 AM                │
+  │                                         │
+  │ IF ALL GREEN:                          │
+  │  ✓ Parser ≥95%                        │
+  │  ✓ Lighthouse ≥85                     │
+  │  ✓ Tests 100% (no flakes)             │
+  │  ✓ Security 0 critical                │
+  │  ✓ Team confidence ≥4/5               │
+  │  ✓ Stakeholder approved                │
+  │                                         │
+  │ → DEPLOY FRIDAY AFTERNOON 🚀           │
+  │                                         │
+  │ ELSE:                                   │
+  │  ✗ Launch with limitations (beta)      │
+  │  OR                                     │
+  │  ✗ Extend sprint 1 week                │
+  │  OR                                     │
+  │  ✗ Defer features to v1.1             │
+  └─────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                           TEAM ALLOCATION
+
+  Backend (1 dev):
+    Week 1: Parser retry + placeholder images + webhook
+    Week 2: Risk scoring + PDF + LLM optimization
+    Week 3: Observability + documentation + security audit
+
+  Frontend (1 dev):
+    Week 1: Layout audit + CSS vars + checkbox + mobile test
+    Week 2: Polish design + image upload + Lighthouse optimization
+    Week 3: Performance + A11y + bundle optimization
+
+  QA (1 dev):
+    Week 1: Fixtures + regression suite + parser tests
+    Week 2: E2E tests (3 scenarios) + data validation
+    Week 3: Load testing + security + full regression
+
+  DevOps (1 dev):
+    Week 1: Docker setup + .env template + health checks
+    Week 2: GitHub Actions workflow + pre-commit hooks
+    Week 3: Monitoring + deployment runbook + go-live checklist
+
+  PM (1 person):
+    Every day: Standups (15 min), blockers, velocity tracking
+    Every week: Demo Friday 4pm, retro 4:30pm
+    Week 3: Go/no-go decision, launch coordination
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                         ESTIMATED VELOCITY
+
+  Week 1: 21 story points (foundation)
+  Week 2: 18 story points (integration)
+  Week 3: 15 story points (polish + launch)
+  ──────────────────────────
+  TOTAL:  54 story points
+
+  Contingency: 3 days (included in Week 3)
+  Reserve features: Dark mode, advanced analytics (defer if needed)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                      CRITICAL PATH (What blocks launch?)
+
+  PARSER SUCCESS ──────┐
+  RISK SCORING ────────┼─→ MVP READY ──→ SECURITY AUDIT ──→ LAUNCH
+  TESTS PASSING ───────┤                  MONITORING OK
+  LIGHTHOUSE ≥85 ──────┘
+
+  Any of above fails → Escalate immediately → Adjust scope/timeline
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                         SUCCESS STORY (Vision)
+
+  Friday 28 June, 5pm: Product owner gives thumbs up ✓
+  Friday 28 June, 6pm: Deploy to production 🚀
+
+  Saturday 29 June, 9am: Monitor metrics (all green) ✓
+
+  First user registers, creates inspection, gets report:
+    "Wow, this is actually useful!" 🎉
+
+  Week of July 1-5: Monitor, hotfix, iterate
+
+  By July 15: 100+ real inspections in production
+
+  MISSION ACCOMPLISHED: MVP lives!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                          Prepared by: Architect
+                          Start Date: June 8, 2026
+                          Status: READY TO EXECUTE
+
+                              LET'S GO! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════

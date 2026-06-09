@@ -1,0 +1,490 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║              ПОДКАПОТ СПРИНТ: ПОЛНЫЙ ПАКЕТ ДОКУМЕНТОВ                         ║
+║                      3-НЕДЕЛЬНЫЙ ПЛАН (8-28 ИЮНЯ 2026)                        ║
+║                                                                               ║
+║                     ✅ ПОЛНОСТЬЮ ПОДГОТОВЛЕНО К СТАРТУ                       ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+ДОСТАВЛЕННЫЕ АРТЕФАКТЫ
+═════════════════════════════════════════════════════════════════════════════════
+
+ОСНОВНЫЕ ДОКУМЕНТЫ СПРИНТА (11 файлов, 120+ страниц):
+
+1. ✅ 00_START_HERE.md
+   → Навигация & ориентация (5 pages)
+   → Для: всех на День 1
+   → Содержит: карта документов, быстрый старт, FAQ
+
+2. ✅ SPRINT_SUMMARY.txt
+   → Executive summary спринта (7 pages)
+   → Для: всех (обзор)
+   → Содержит: большую картину, blockers, метрики, роли
+
+3. ✅ README_SPRINT.md
+   → Практический дневной гайд (5 pages)
+   → Для: всех (дневное использование)
+   → Содержит: по ролям, метрики, quick reference
+
+4. ✅ DAILY_PRIORITIES.md
+   → День-за-днём checklist (12 pages)
+   → Для: всех (ежедневно)
+   → Содержит: ПН-ПТ tasks, success criteria, templates
+
+5. ✅ SPRINT_PLAN.md
+   → Полный 3-недельный план (15 pages)
+   → Для: tech leads, PM
+   → Содержит: фазы, приоритеты, checkpoints, зависимости
+
+6. ✅ ARCHITECTURE_DECISIONS.md
+   → Технические решения (12 pages)
+   → Для: backend, frontend, QA (реализаторы)
+   → Содержит: parser retry, webhook, image gen, тесты с примерами кода
+
+7. ✅ RISK_REGISTER.md
+   → Управление рисками (13 pages)
+   → Для: tech leads, PM
+   → Содержит: 12 рисков, mitigation, escalation procedures
+
+8. ✅ SUCCESS_METRICS.md
+   → Метрики успеха & go/no-go (20 pages)
+   → Для: QA lead, PM (принимающие решения)
+   → Содержит: 18 метрик, targets, measurement, launch gates
+
+9. ✅ TIMELINE_VISUAL.txt
+   → ASCII визуальный график (3 pages)
+   → Для: всех (quick reference)
+   → Содержит: неделя-за-неделей, milestones, risks
+
+10. ✅ SETUP_CHECKLIST.md
+    → Подготовка окружения (8 pages)
+    → Для: backend, frontend, QA, DevOps (до Дня 1)
+    → Содержит: environment setup, confirmations, first day
+
+11. ✅ DOCUMENTS_INDEX.txt
+    → Полный индекс документов (5 pages)
+    → Для: всех (навигация)
+    → Содержит: что читать, когда, в каком порядке
+
+БОНУСНЫЕ ДОКУМЕНТЫ (2 файла):
+
+12. ✅ SPRINT_DELIVERY_REPORT.md
+    → Отчет о доставке плана (8 pages)
+    → Для: PM, stakeholders
+    → Содержит: что доставлено, покрытие, выводы
+
+13. ✅ FINAL_DELIVERABLES.txt
+    → Этот файл (checklist всего доставленного)
+    → Для: всех (финальная проверка)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ВЛОЖЕННОЕ СОДЕРЖИМОЕ
+═════════════════════════════════════════════════════════════════════════════════
+
+КАЖДЫЙ ДОКУМЕНТ СОДЕРЖИТ:
+
+00_START_HERE.md
+  ├─ Карта документов
+  ├─ Быстрая навигация по ролям
+  ├─ Ключевые даты & deadlines
+  ├─ Критичный путь (critical path)
+  ├─ Успех vs Неудача
+  └─ Первые шаги (DO THIS TODAY)
+
+SPRINT_SUMMARY.txt
+  ├─ Большая картина (30,000 ft view)
+  ├─ 3-недельная фаза
+  ├─ Критичные blockers & решения
+  ├─ Go/no-go gates
+  ├─ Располоение команды
+  ├─ Темп работы & contingency
+  ├─ Коммуникационные каналы
+  └─ Лаунч vision
+
+README_SPRINT.md
+  ├─ Quick start (5 min reading)
+  ├─ Описание по ролям
+  ├─ Daily tracking
+  ├─ Metrics at a glance
+  ├─ Decision gates
+  ├─ Escalation paths
+  ├─ Key contacts
+  └─ What to do TODAY
+
+DAILY_PRIORITIES.md
+  ├─ НЕДЕЛЯ 1 (Mon-Fri)
+  │  ├─ Понедельник 8 июня
+  │  ├─ Вторник 9 июня
+  │  ├─ Среда 10 июня
+  │  ├─ Четверг 11 июня
+  │  └─ Пятница 12 июня (Review & Fixes)
+  │
+  ├─ НЕДЕЛЯ 2 (Mon-Fri)
+  │  ├─ Понедельник 15 июня
+  │  ├─ Вторник 16 июня
+  │  ├─ Среда 17 июня
+  │  ├─ Четверг 18 июня
+  │  └─ Пятница 19 июня (CI/CD & Runbooks)
+  │
+  ├─ НЕДЕЛЯ 3 (Mon-Fri)
+  │  ├─ Понедельник 22 июня
+  │  ├─ Вторник 23 июня
+  │  ├─ Среда 24 июня
+  │  ├─ Четверг 25 июня (Full Regression)
+  │  └─ Пятница 26 июня (LAUNCH DAY!)
+  │
+  ├─ Daily standup template
+  ├─ Weekly demo format
+  └─ Sprint velocity tracking
+
+SPRINT_PLAN.md
+  ├─ ФАЗА 1: Неделя 1 (Фундамент)
+  │  ├─ Backend приоритеты 1-3
+  │  ├─ Frontend приоритеты 1-5
+  │  ├─ Тестирование (неделя 1)
+  │  └─ Checkpoints неделя 1
+  │
+  ├─ ФАЗА 2: Неделя 2 (Интеграция)
+  │  ├─ Backend приоритеты 2-3
+  │  ├─ Frontend приоритеты 2-5
+  │  ├─ Тестирование (неделя 2)
+  │  ├─ DevOps (неделя 2)
+  │  └─ Checkpoints неделя 2
+  │
+  ├─ ФАЗА 3: Неделя 3 (Запуск)
+  │  ├─ Backend приоритет 3
+  │  ├─ Frontend приоритет 3
+  │  ├─ Тестирование (неделя 3)
+  │  ├─ QA & Release
+  │  └─ Checkpoints неделя 3
+  │
+  ├─ Риск-факторы & mitigation
+  ├─ Метрики успеха
+  ├─ Timeline summary
+  ├─ Dependencies & blockers
+  ├─ Роли & ответственность
+  └─ Коммуникация
+
+ARCHITECTURE_DECISIONS.md
+  ├─ BACKEND ARCHITECTURE
+  │  ├─ 1. Avito Parser Retry & Resilience (код)
+  │  ├─ 2. Image Generation Service (код)
+  │  ├─ 3. Webhook Synchronization (код)
+  │  └─ Testing examples (код)
+  │
+  ├─ FRONTEND ARCHITECTURE
+  │  ├─ 1. Layout System с CSS Variables (CSS)
+  │  ├─ 2. Custom Checkbox Component (Vue code)
+  │  └─ 3. Image Upload Component (Vue code)
+  │
+  ├─ TESTING ARCHITECTURE
+  │  ├─ Test Pyramid
+  │  └─ CI/CD trigger patterns
+  │
+  └─ INFRASTRUCTURE
+     ├─ Services & Dependencies (docker-compose)
+     └─ Deployment checklist
+
+RISK_REGISTER.md
+  ├─ КРИТИЧЕСКИЕ РИСКИ (3)
+  │  ├─ 1. Avito Parser Rate Limiting
+  │  ├─ 2. Database Migration Failure
+  │  └─ 3. LLM API Costs Exceed Budget
+  │
+  ├─ ВЫСОКИЕ РИСКИ (4)
+  │  ├─ 4. Frontend Layout Bugs on Mobile
+  │  ├─ 5. E2E Tests are Flaky
+  │  ├─ 6. Webhook Delivery Failures
+  │  └─ 7. Team Capacity Underestimated
+  │
+  ├─ СРЕДНИЕ РИСКИ (3)
+  ├─ НИЗКИЕ РИСКИ (2)
+  ├─ Risk Dashboard
+  ├─ Escalation Procedures
+  ├─ Risk Acceptance Statement
+  ├─ Weekly Risk Review
+  └─ Contingency Budget
+
+SUCCESS_METRICS.md
+  ├─ BACKEND METRICS (6)
+  │  ├─ 1. Parser Success Rate
+  │  ├─ 2. Parsing Latency
+  │  ├─ 3. Risk Scoring Accuracy
+  │  ├─ 4. Error Rate
+  │  ├─ 5. Webhook Delivery
+  │  └─ 6. Database Health
+  │
+  ├─ FRONTEND METRICS (6)
+  │  ├─ 7. Lighthouse Score (Mobile)
+  │  ├─ 8. Core Web Vitals
+  │  ├─ 9. Bundle Size
+  │  ├─ 10. Mobile Viewport Coverage
+  │  ├─ 11. Component Accessibility
+  │  └─ (Metrics 12-18 operations...)
+  │
+  ├─ GO/NO-GO GATES (выполнить ВСЕ для запуска)
+  ├─ Success Criteria by Week
+  ├─ Measurement & Reporting
+  └─ Final Scorecard
+
+TIMELINE_VISUAL.txt
+  ├─ НЕДЕЛЯ 1 (visual ASCII)
+  │  ├─ Backend: Parse, CSS, Webhook
+  │  ├─ Frontend: CSS Audit, Mobile, Upload
+  │  └─ QA/DevOps: Tests, Health checks
+  │
+  ├─ НЕДЕЛЯ 2 (visual ASCII)
+  ├─ НЕДЕЛЯ 3 (visual ASCII)
+  ├─ Daily standup times
+  ├─ Weekly demo times
+  ├─ Risk hotspots
+  ├─ Go-live gates
+  ├─ Critical path
+  └─ Team allocation
+
+SETUP_CHECKLIST.md
+  ├─ Documentation Review
+  ├─ Environment Setup
+  │  ├─ Repository
+  │  ├─ Python Environment
+  │  ├─ Database
+  │  ├─ Configuration
+  │  ├─ Running Services
+  │  ├─ Code Quality Tools
+  │  └─ Tests
+  │
+  ├─ Frontend Setup
+  ├─ Infrastructure Setup
+  ├─ Team Communication Setup
+  ├─ Team Roles Confirmation
+  ├─ Key Contacts
+  ├─ First Day Tasks
+  ├─ Daily Standup Checklist
+  ├─ Weekly Rhythm
+  ├─ Red Flags (Escalate!)
+  ├─ Success Checklist (Friday Week 1)
+  ├─ Setup Verification (5-min check)
+  └─ Final Sign-off
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ОХВАТЫВАЕМЫЕ ОБЛАСТИ СПРИНТА
+═════════════════════════════════════════════════════════════════════════════════
+
+✅ BACKEND PRIORITIES
+  ├─ Avito API интеграция (парсинг, retry, captcha detection)
+  ├─ Автогенерация placeholder изображений
+  ├─ Risk scoring алгоритм (correlation >0.7)
+  ├─ Async PDF generation (<5s)
+  ├─ Webhook для синхронизации статуса
+  ├─ LLM optimization (no emoji, token counting)
+  ├─ Observability (Prometheus, JSON logs)
+  ├─ API documentation (Swagger)
+  └─ Security audit (OWASP Top 10)
+
+✅ FRONTEND PRIORITIES
+  ├─ Layout fixes (font sizes ≥14px, no emoji)
+  ├─ CSS design system с variables
+  ├─ Custom checkbox component (styled)
+  ├─ Image upload (drag & drop, fallback)
+  ├─ Professional design (no AI artifacts)
+  ├─ Mobile optimization (320px-1920px)
+  ├─ Lighthouse optimization (≥85)
+  ├─ Core Web Vitals (LCP <2.5s)
+  ├─ Bundle optimization (<150KB gzip)
+  ├─ Accessibility (WCAG AA)
+  └─ Dark mode (optional)
+
+✅ TESTING PRIORITIES
+  ├─ API regression tests (23+ endpoints)
+  ├─ Parser validation tests (20+ fixtures)
+  ├─ E2E tests (3 critical scenarios)
+  ├─ Load testing (p95 <1s @ 10 concurrent)
+  ├─ Security testing (OWASP)
+  ├─ Performance testing (Lighthouse)
+  ├─ Coverage tracking (≥80% critical paths)
+  ├─ Flakiness prevention (100% consistent)
+  └─ Full regression (pre-deploy)
+
+✅ DEVOPS PRIORITIES
+  ├─ Docker setup & health checks
+  ├─ GitHub Actions CI/CD pipeline
+  ├─ Pre-commit hooks (black, ruff, mypy)
+  ├─ Prometheus monitoring setup
+  ├─ Alerting rules configuration
+  ├─ Blue-green или canary deployment
+  ├─ Deployment runbook (VPS/production)
+  ├─ Incident response procedures
+  ├─ Backup & recovery testing
+  └─ Production readiness checklist
+
+═════════════════════════════════════════════════════════════════════════════════
+
+МЕТРИКИ УСПЕХА (18 TOTAL)
+═════════════════════════════════════════════════════════════════════════════════
+
+BACKEND (6 метрик):
+  1. Parser success rate: ≥95% (daily monitoring)
+  2. Parsing latency p95: <5 seconds
+  3. Risk score correlation: >0.70 (vs user verdict)
+  4. API error rate: <0.5% (production)
+  5. Webhook delivery: 99.9% (with retries)
+  6. Database health: 0 constraint violations
+
+FRONTEND (6 метрик):
+  7. Lighthouse mobile score: ≥85 (weekly)
+  8. LCP (Core Web Vitals): <2.5 seconds
+  9. Bundle size: <150KB gzip
+  10. Mobile viewports: 100% correct (320px-1920px)
+  11. Accessibility: axe audit <3 issues (minor only)
+  12. WCAG AA compliance: 100%
+
+TESTING (3 метрик):
+  13. Test coverage: ≥80% critical paths
+  14. E2E pass rate: 100% (no flakes)
+  15. Regression suite: 100% pass
+
+OPERATIONS (3 метрик):
+  16. Deployment success: 100% (no rollbacks)
+  17. Monitoring alerts: All configured
+  18. Documentation: Complete & reviewed
+
+GO/NO-GO = ALL 18 METRICS GREEN ✓
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ПРОЦЕССЫ & ПРОЦЕДУРЫ
+═════════════════════════════════════════════════════════════════════════════════
+
+ЕЖЕДНЕВНО (9:00am UTC):
+  ├─ 15-minute standup
+  ├─ Status: Done yesterday, blockers, today's goal
+  ├─ Demo: Show progress
+  └─ Record metrics in #sprint-podkapot
+
+КАЖДЫЙ ПОНЕДЕЛЬНИК:
+  ├─ Sprint kickoff (9:00am standup)
+  └─ Confirm no surprises from weekend
+
+КАЖДУЮ ПЯТНИЦУ:
+  ├─ 4:00pm: Demo (15 min, show week's work)
+  ├─ 4:30pm: Retro (30 min, lessons learned)
+  ├─ Update SUCCESS_METRICS.md with current status
+  ├─ Assess: Are we on track?
+  └─ Plan next week if needed
+
+НЕДЕЛЯ 3 - ОСОБОЕ:
+  ├─ Friday 10:00am: Go/no-go decision meeting
+  │  ├─ Review all 18 success metrics
+  │  ├─ Check: All green?
+  │  ├─ Decision: LAUNCH? or EXTEND/DEFER?
+  │  └─ Communicate to stakeholders
+  │
+  └─ Friday 6:00pm: DEPLOY TO PRODUCTION 🚀
+
+ESCALATION ПРОЦЕДУРЫ:
+
+Level 1 (Minor Issue, 1 person affected):
+  └─ Slack thread in #sprint-podkapot, same day fix
+
+Level 2 (Blocker, 2+ people affected):
+  └─ Slack mention + 15min sync, 2 hour fix SLA
+
+Level 3 (Critical, project at risk):
+  └─ #critical channel, emergency standup, 30min decision SLA
+
+═════════════════════════════════════════════════════════════════════════════════
+
+КАК ИСПОЛЬЗОВАТЬ ЭТОТ ПАКЕТ
+═════════════════════════════════════════════════════════════════════════════════
+
+ДЕНЬ 1 (Понедельник 8 июня):
+  1. Все читают: 00_START_HERE.md (5 min)
+  2. Все читают: SPRINT_SUMMARY.txt (15 min)
+  3. Все читают: README_SPRINT.md (10 min)
+  4. По ролям читают: ARCHITECTURE_DECISIONS.md
+  5. Выполняют: SETUP_CHECKLIST.md (environment setup)
+  6. Присутствуют: Kickoff standup (9:00am)
+
+НЕДЕЛИ 1-3:
+  1. Каждое утро: Check DAILY_PRIORITIES.md
+  2. Каждый день: Attend standup (9:00am, 15 min)
+  3. Каждый день: Работать на assigned tasks
+  4. Каждую пятницу: Demo + retro
+  5. При blockers: Escalate per RISK_REGISTER.md
+
+НЕДЕЛЯ 3:
+  1. Пятница 10:00am: Go-live decision
+  2. Пятница 6:00pm: Deploy to production
+  3. Выходные: Monitor 24/7 (на-call team)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ФИНАЛЬНЫЙ CHECKLIST
+═════════════════════════════════════════════════════════════════════════════════
+
+ПЕРЕД СТАРТОМ СПРИНТА:
+  [ ] Все 13 документов доступны в проекте
+  [ ] Все члены команды прочитали 00_START_HERE.md
+  [ ] Все выполнили SETUP_CHECKLIST.md
+  [ ] Коммунікационные каналы готовы (#sprint-podkapot)
+  [ ] Календарные события созданы (ежедневные standups)
+  [ ] Каждый знает свою роль & первый день
+  [ ] Вопросы отсутствуют (или спросили в Slack)
+  [ ] ОКРУЖЕНИЕ ГОТОВО
+  [ ] КОМАНДА READY
+
+ПЕРВЫЙ ДЕНЬ (Понедельник 9:00am):
+  [ ] Все присутствуют на kickoff
+  [ ] Все подтвердили понимание плана
+  [ ] Все могут ответить: "Что я делаю сегодня?"
+  [ ] Нет критичных blockers
+  [ ] START SPRINT! 🚀
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ИТОГОВАЯ СТАТИСТИКА
+═════════════════════════════════════════════════════════════════════════════════
+
+Документов:                    13 files
+Страниц:                       120+ pages
+Story points:                  54 total (21+18+15)
+Людей в команде:              5 (backend, frontend, QA, DevOps, PM)
+Дней до запуска:              21 days
+Недель спринта:               3 weeks
+Метрик успеха:                18 metrics
+Идентифицированных рисков:    12 risks
+Критичных blockers:           4 (documented + solved)
+Go-live gates:                7 + stakeholder approval
+
+├─ BACKEND: Parser, Risk scoring, PDF, Webhook, Observability
+├─ FRONTEND: Layout, CSS, Checkbox, Image upload, Lighthouse
+├─ QA: Regression, E2E, Load test, Security, Full coverage
+└─ DEVOPS: Docker, CI/CD, Monitoring, Deployment, Runbooks
+
+═════════════════════════════════════════════════════════════════════════════════
+
+                           СПРИНТ ГОТОВ К СТАРТУ ✅
+
+                   Все необходимые документы доставлены
+               Все процессы задокументированы и процедуры определены
+                  Все риски идентифицированы и смягчены
+                    Все метрики установлены и отслеживаются
+
+                      КОМАНДА, ВЫ ГОТОВЫ? 🚀
+
+                    Понедельник 9:00am — GO LIVE!
+
+═════════════════════════════════════════════════════════════════════════════════
+
+Документы подготовлены:  8 июня 2026
+Статус:                  ✅ ПОЛНОСТЬЮ ГОТОВО К ВЫПОЛНЕНИЮ
+Автор:                   Архитектор проекта
+
+Если у вас есть вопросы:  Спросите в #sprint-podkapot на Slack
+Если вы потеряетесь:     Откройте 00_START_HERE.md или DOCUMENTS_INDEX.txt
+
+                         ДАВАЙТЕ ЗАПУСТИМ ЭТОТ MVP!
+                              LET'S GO! 🚀
+
+═════════════════════════════════════════════════════════════════════════════════

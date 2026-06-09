@@ -1,0 +1,24 @@
+{
+  "name": "autorewier-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.61.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/test-utils": "^2.4.11",
+    "jsdom": "^29.1.1",
+    "vite": "^5.4.19",
+    "vitest": "^2.1.9"
+  }
+}

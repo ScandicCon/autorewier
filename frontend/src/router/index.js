@@ -1,0 +1,34 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import { checkAuth } from '../api/inspectionApi'
+
+const routes = [
+  { path: '/', component: () => import('../views/LandingView.vue'), meta: { public: true } },
+  { path: '/login', component: () => import('../views/LoginView.vue'), meta: { public: true } },
+  { path: '/register', component: () => import('../views/RegisterView.vue'), meta: { public: true } },
+  { path: '/verify-email', component: () => import('../views/VerifyEmailView.vue'), meta: { public: true } },
+  { path: '/app', component: () => import('../views/DashboardView.vue') },
+  { path: '/app/new', component: () => import('../views/NewInspectionView.vue') },
+  { path: '/app/inspection/:id', component: () => import('../views/InspectionDetailView.vue') },
+]
+
+const router = createRouter({
+  history: createWebHistory('/'),
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    return { top: 0 }
+  }
+})
+
+router.beforeEach(async (to) => {
+  if (to.meta.public) return true
+  try {
+    await checkAuth()
+    return true
+  } catch {
+    return '/login'
+  }
+})
+
+export default router

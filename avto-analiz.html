@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>АвтоПроверка — анализ авто перед покупкой</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f4f5f7;--surface:#ffffff;--surface-2:#f7f8fa;--line:#e6e8ec;--line-2:#d5d8de;
+  --text:#1a1d23;--muted:#6b7280;--faint:#9aa0aa;
+  --safe:#15a05a;--safe-bg:#e7f6ee;--caution:#d99100;--caution-bg:#fdf3df;--crit:#e0463c;--crit-bg:#fbe9e7;
+  --accent:#2563eb;--accent-bg:#e8f0fe;
+  --p1:#e0463c;--p2:#d99100;--p3:#6b7280;
+  --shadow:0 1px 3px rgba(20,25,40,.06),0 4px 16px rgba(20,25,40,.05);
+  --r:14px;--r-sm:10px;
+}
+[data-theme="dark"]{
+  --bg:#0d1017;--surface:#161a22;--surface-2:#1c212b;--line:#262c37;--line-2:#323a47;
+  --text:#e8ebf0;--muted:#9aa3b2;--faint:#6b7480;
+  --safe:#33c46f;--safe-bg:#143020;--caution:#f0b24a;--caution-bg:#2e2510;--crit:#ff6358;--crit-bg:#331916;
+  --accent:#5b8cff;--accent-bg:#16213b;
+  --p1:#ff6358;--p2:#f0b24a;--p3:#9aa3b2;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;font-size:15px;transition:background .25s,color .25s}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+button{font-family:inherit;cursor:pointer}
+.mono{font-variant-numeric:tabular-nums}
+
+/* topbar */
+.topbar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand .mk{width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:16px}
+.top-actions{display:flex;align-items:center;gap:8px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:17px;color:var(--text)}
+.icon-btn:hover{background:var(--surface-2)}
+.demo-switch{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:4px}
+.demo-switch button{border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:600;padding:5px 9px;border-radius:7px}
+.demo-switch button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+
+/* hero */
+.hero{padding:30px 0 18px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:-.6px;margin-bottom:4px}
+.hero .lead{color:var(--muted);margin-bottom:20px}
+.inputcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.input-row{display:flex;gap:10px;flex-wrap:wrap}
+.field{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:0 14px;height:52px}
+.field input{flex:1;border:none;background:transparent;color:var(--text);font-size:15px;outline:none}
+.field .pfx{color:var(--faint);font-size:18px}
+.btn{height:52px;padding:0 22px;border-radius:var(--r-sm);border:none;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px;transition:.18s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn-soft{background:var(--surface-2);color:var(--text);border:1px solid var(--line)}
+.btn-soft:hover{background:var(--line)}
+.hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:30px;padding:6px 12px}
+.chip .led{width:7px;height:7px;border-radius:50%}
+.chip.ok .led{background:var(--safe)}
+.note{color:var(--faint);font-size:12.5px;margin-left:auto}
+
+/* layout */
+.app{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start;padding:24px 0 120px}
+.col-main{min-width:0;display:flex;flex-direction:column;gap:18px}
+.aside{position:sticky;top:76px}
+
+/* section card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;animation:rise .4s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.card-h h2{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.card-h .cnt{font-size:12px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);padding:2px 8px;border-radius:20px}
+.card-h .sp{flex:1}
+.card-b{padding:18px}
+
+/* verdict (sticky summary) */
+.verdict{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:var(--surface)}
+.verdict-top{padding:18px;text-align:center;color:#fff}
+.verdict-top.safe{background:linear-gradient(135deg,var(--safe),#0d8a4c)}
+.verdict-top .vstatus{font-size:24px;font-weight:800;letter-spacing:-.4px}
+.verdict-top .vsub{font-size:12.5px;opacity:.9;margin-top:2px}
+.gauge{width:120px;height:120px;margin:12px auto 4px;position:relative}
+.gauge svg{transform:rotate(-90deg)}
+.gauge .num{position:absolute;inset:0;display:grid;place-items:center;flex-direction:column;text-align:center}
+.gauge .num b{font-size:30px;font-weight:800;line-height:1}
+.gauge .num span{font-size:11px;opacity:.85}
+.verdict-b{padding:16px 18px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--line)}
+.kv:last-of-type{border-bottom:none}
+.kv .k{color:var(--muted);font-size:13px}
+.kv .v{font-weight:700;font-size:15px}
+.kv .v.big{font-size:19px;font-variant-numeric:tabular-nums}
+.summary-txt{font-size:13.5px;color:var(--muted);line-height:1.6;margin:10px 0 14px;padding:12px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--line)}
+.act-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.act-row .btn-soft{height:42px;justify-content:center;font-size:13.5px;width:100%}
+.act-full{height:46px;width:100%;justify-content:center;margin-top:8px}
+
+/* risk cards */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.seg{display:flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:3px}
+.seg button{border:none;background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:6px}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.sortsel{margin-left:auto;font-size:12.5px;color:var(--muted)}
+.sortsel select{font-family:inherit;font-size:12.5px;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.risk{border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;margin-bottom:10px;background:var(--surface);transition:.18s}
+.risk:hover{border-color:var(--line-2)}
+.risk.gone{display:none}
+.risk-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
+.risk-h h3{font-size:15px;font-weight:700;margin-right:auto}
+.badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.3px}
+.b-p1{background:var(--crit-bg);color:var(--crit)}
+.b-p2{background:var(--caution-bg);color:var(--caution)}
+.b-p3{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.conf{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.conf .bar{width:46px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.conf .bar i{display:block;height:100%;background:var(--accent)}
+.risk p{font-size:13.5px;color:var(--text);margin-bottom:8px}
+.risk .meta{font-size:12.5px;color:var(--muted);line-height:1.55}
+.risk .meta b{color:var(--text);font-weight:600}
+.cost-tag{font-size:12px;font-weight:700;color:var(--caution);background:var(--caution-bg);padding:3px 9px;border-radius:6px}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.4px}
+.tbl td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .desc{color:var(--muted);font-size:12.5px}
+.num-cell{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.parts-hint{font-size:11.5px;color:var(--faint)}
+.totrow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px;padding:14px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--line)}
+.tot{display:flex;flex-direction:column}
+.tot span{font-size:11.5px;color:var(--muted)}
+.tot b{font-size:18px;font-variant-numeric:tabular-nums}
+.tot.grand b{color:var(--accent)}
+.toggle{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.sw{width:38px;height:22px;border-radius:20px;background:var(--line-2);position:relative;transition:.2s}
+.sw i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle.on .sw{background:var(--safe)}
+.toggle.on .sw i{left:18px}
+
+/* parts */
+.part{display:flex;gap:14px;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;margin-bottom:10px;flex-wrap:wrap}
+.part-main{flex:1;min-width:200px}
+.part-main h3{font-size:14.5px;font-weight:700;margin-bottom:3px}
+.part-main .why{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.avail{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+.avail.ok{background:var(--safe-bg);color:var(--safe)}
+.avail.lim{background:var(--caution-bg);color:var(--caution)}
+.offers{flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px}
+.offer{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.offer .shop{font-weight:600}
+.offer .price{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+.offer .date{font-size:11px;color:var(--faint)}
+.vin-note{font-size:12px;color:var(--caution);background:var(--caution-bg);border-radius:8px;padding:9px 12px;margin-top:6px;display:flex;gap:8px;align-items:center}
+
+/* seller claims */
+.claim{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--line)}
+.claim:last-child{border-bottom:none}
+.claim .q{font-size:14px;flex:1}
+.claim .q small{display:block;color:var(--faint);font-size:11.5px;margin-top:3px}
+.tag-unconf{font-size:11px;font-weight:700;color:var(--caution);background:var(--caution-bg);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.impact-note{margin-top:12px;font-size:13px;color:var(--muted);background:var(--accent-bg);border-radius:8px;padding:11px 13px}
+
+/* weak spots / checklist accordion */
+.acc-item{border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:8px;overflow:hidden}
+.acc-head{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.acc-head .ico{color:var(--accent)}
+.acc-head .chev{margin-left:auto;color:var(--faint);transition:.2s}
+.acc-item.open .chev{transform:rotate(180deg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .28s ease}
+.acc-body .inner{padding:0 14px 14px;font-size:13.5px;color:var(--muted);line-height:1.6}
+.acc-body .inner .lbl{color:var(--text);font-weight:600}
+.redflag{color:var(--crit);font-weight:600}
+.add-chk{font-size:12px;color:var(--accent);background:var(--accent-bg);border:none;padding:6px 11px;border-radius:7px;margin-top:8px;font-weight:600}
+.chk-line{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}
+.chk-line:last-child{border-bottom:none}
+.chk-box{width:20px;height:20px;border-radius:6px;border:2px solid var(--line-2);flex:none;margin-top:1px;display:grid;place-items:center;cursor:pointer;color:transparent;font-size:13px}
+.chk-line.done .chk-box{background:var(--safe);border-color:var(--safe);color:#fff}
+.chk-line.done .chk-txt{text-decoration:line-through;color:var(--faint)}
+.chk-txt{font-size:13.5px}
+.chk-txt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+/* compare */
+.cmp{width:100%;border-collapse:collapse;font-size:13px}
+.cmp th{padding:10px;text-align:center;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+.cmp th.win{background:var(--safe-bg);border-radius:8px 8px 0 0}
+.cmp td{padding:11px 10px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.cmp td.lbl{text-align:left;color:var(--muted);font-size:12.5px}
+.cmp td.win{background:var(--safe-bg)}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.pill.safe{background:var(--safe-bg);color:var(--safe)}
+.pill.caution{background:var(--caution-bg);color:var(--caution)}
+.pill.crit{background:var(--crit-bg);color:var(--crit)}
+.history{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.hrow{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:13.5px}
+.hrow .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.hrow .car{font-weight:600;flex:1}
+.hrow .price{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* states */
+.state{display:none;padding:50px 0}
+.state.show{display:block}
+.skel{background:linear-gradient(90deg,var(--surface-2) 25%,var(--line) 37%,var(--surface-2) 63%);background-size:400% 100%;animation:sh 1.3s infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.steps{display:flex;flex-direction:column;gap:14px;max-width:460px;margin:0 auto 30px}
+.step{display:flex;align-items:center;gap:14px}
+.step .ic{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:15px;color:var(--muted);flex:none}
+.step.done .ic{background:var(--safe);border-color:var(--safe);color:#fff}
+.step.active .ic{border-color:var(--accent);color:var(--accent)}
+.step .t{font-weight:600;font-size:14px}
+.step .s{font-size:12px;color:var(--muted)}
+.step.done .s{color:var(--safe)}
+.prog{height:6px;background:var(--line);border-radius:4px;overflow:hidden;max-width:460px;margin:0 auto 28px}
+.prog i{display:block;height:100%;background:var(--accent);width:62%;transition:width .4s}
+.empty-box{max-width:520px;margin:0 auto;text-align:center}
+.empty-box .big-ic{font-size:46px;margin-bottom:14px}
+.empty-box h2{font-size:20px;margin-bottom:8px}
+.empty-box p{color:var(--muted);margin-bottom:18px}
+.state-note{display:flex;gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;margin:10px auto;max-width:520px;box-shadow:var(--shadow)}
+.state-note .n-ic{font-size:22px;flex:none}
+.state-note h3{font-size:14.5px;margin-bottom:4px}
+.state-note p{font-size:13px;color:var(--muted);margin:0}
+.state-note.warn{border-left:3px solid var(--caution);border-radius:0 var(--r-sm) var(--r-sm) 0}
+.state-note.err{border-left:3px solid var(--crit);border-radius:0 var(--r-sm) var(--r-sm) 0}
+.steplist{font-size:13px;color:var(--muted);margin:8px 0 0 0;padding-left:18px;line-height:1.7}
+
+/* mobile sticky bar */
+.mbar{display:none}
+@media(max-width:980px){
+  .app{grid-template-columns:1fr}
+  .aside{position:static;order:-1}
+  .verdict{margin-bottom:0}
+}
+@media(max-width:680px){
+  .wrap{padding:0 14px}
+  .hero h1{font-size:22px}
+  .note{margin-left:0;width:100%}
+  .btn,.field{height:48px}
+  .input-row .btn{width:100%;justify-content:center}
+  .act-row{grid-template-columns:1fr 1fr}
+  .tbl thead{display:none}
+  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
+  .tbl tr{border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:10px;padding:6px 10px}
+  .tbl td{border:none;padding:6px 0;display:flex;justify-content:space-between;gap:14px}
+  .tbl td::before{content:attr(data-l);color:var(--muted);font-size:12px;font-weight:600}
+  .tbl td.desc-cell{flex-direction:column;gap:3px}
+  .tbl td.desc-cell::before{content:""}
+  .part{flex-direction:column}
+  .app{padding-bottom:90px}
+  .mbar{display:grid;grid-template-columns:1fr 1fr 1fr;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+  .mbar a{padding:10px 4px;text-align:center;font-size:11px;color:var(--muted);font-weight:600}
+  .mbar a b{display:block;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
+  .mbar a.crit b{color:var(--safe)}
+  .cmp{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><span class="mk">🚗</span> АвтоПроверка</div>
+    <div class="top-actions">
+      <div class="demo-switch" id="demoSwitch">
+        <button class="on" data-state="results">Результат</button>
+        <button data-state="loading">Загрузка</button>
+        <button data-state="captcha">Captcha</button>
+        <button data-state="error">Ошибка</button>
+        <button data-state="empty">Пусто</button>
+      </div>
+      <button class="icon-btn" id="themeBtn" title="Сменить тему">🌙</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO + INPUT ============ -->
+<section class="hero wrap" id="block-hero">
+  <h1>Проверьте авто перед покупкой за 30 секунд</h1>
+  <p class="lead">Вставьте ссылку на объявление — мы найдём риски, посчитаем ремонт и соберём чеклист осмотра.</p>
+  <div class="inputcard">
+    <div class="input-row">
+      <label class="field"><span class="pfx">🔗</span><input placeholder="Вставьте ссылку на объявление (Avito, Auto.ru, Drom…)" value="https://www.avito.ru/.../toyota_camry_2017"></label>
+      <button class="btn btn-primary" onclick="runAnalysis()">⚡ Анализировать</button>
+      <button class="btn btn-soft">✍️ Заполнить вручную</button>
+    </div>
+    <div class="hero-meta">
+      <span class="chip ok"><span class="led"></span> Источник: Avito</span>
+      <span class="chip">🕒 Обновлено: сегодня, 14:20</span>
+      <span class="chip ok"><span class="led"></span> Парсинг: успешно</span>
+      <span class="note">Анализ обычно занимает 10–30 сек</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATE: RESULTS ============ -->
+<div id="state-results" class="state show">
+<div class="wrap app">
+
+  <!-- MAIN COLUMN -->
+  <div class="col-main">
+
+    <!-- BLOCK 3: RISKS -->
+    <section class="card" id="block-risks">
+      <div class="card-h">
+        <h2>Риски с доказательствами</h2>
+        <span class="cnt" id="riskCount">5</span>
+        <span class="sp"></span>
+      </div>
+      <div class="card-b">
+        <div class="toolbar">
+          <div class="seg" id="riskFilter">
+            <button class="on" data-f="all">Все</button>
+            <button data-f="high">Только high</button>
+            <button data-f="p1">Только P1</button>
+            <button data-f="noinfo">Скрыть инфо</button>
+          </div>
+          <span class="sortsel">Сортировка:
+            <select id="riskSort" onchange="sortRisks()">
+              <option value="prio">по приоритету</option>
+              <option value="cost">по стоимости влияния</option>
+            </select>
+          </span>
+        </div>
+        <div id="riskList"></div>
+      </div>
+    </section>
+
+    <!-- BLOCK 4: REPAIR ESTIMATE -->
+    <section class="card" id="block-repair">
+      <div class="card-h"><h2>Смета ремонта</h2><span class="sp"></span>
+        <label class="toggle" id="sellerToggle" onclick="toggleSellerRepairs()">
+          <span class="sw"><i></i></span> Учесть замены продавца
+        </label>
+      </div>
+      <div class="card-b">
+        <table class="tbl">
+          <thead><tr><th>Категория</th><th>Работы</th><th>Приоритет</th><th>Стоимость, ₽</th></tr></thead>
+          <tbody id="repairBody"></tbody>
+        </table>
+        <div class="totrow">
+          <div class="tot"><span>Запчасти</span><b class="mono" id="tParts">20 000 – 55 000</b></div>
+          <div class="tot"><span>Работы</span><b class="mono" id="tLabor">14 000 – 35 000</b></div>
+          <div class="tot grand"><span>Итого</span><b class="mono" id="tTotal">34 000 – 90 000</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOCK 5: PARTS -->
+    <section class="card" id="block-parts">
+      <div class="card-h"><h2>Какие запчасти менять и где купить</h2></div>
+      <div class="card-b" id="partsBody"></div>
+    </section>
+
+    <!-- BLOCK 6: SELLER CLAIMS -->
+    <section class="card" id="block-seller">
+      <div class="card-h"><h2>Что заявил продавец</h2></div>
+      <div class="card-b">
+        <div id="claimsBody"></div>
+        <div class="impact-note">📉 Заявленные замены снизили оценку ремонта на <b>~8%</b>. Требуют подтверждения чеками и заказ-нарядами.</div>
+      </div>
+    </section>
+
+    <!-- BLOCK 7: MODEL WEAK SPOTS -->
+    <section class="card" id="block-weak">
+      <div class="card-h"><h2>Слабые места модели</h2><span class="cnt">Toyota Camry XV70 · 2.5</span></div>
+      <div class="card-b" id="weakBody"></div>
+    </section>
+
+    <!-- BLOCK 8: INSPECTION CHECKLIST -->
+    <section class="card" id="block-checklist">
+      <div class="card-h"><h2>Чеклист осмотра</h2><span class="sp"></span>
+        <div class="seg" id="chkMode">
+          <button data-m="short">Сокращённый</button>
+          <button class="on" data-m="full">Полный</button>
+        </div>
+      </div>
+      <div class="card-b" id="checklistBody"></div>
+    </section>
+
+    <!-- BLOCK 9: HISTORY & COMPARE -->
+    <section class="card" id="block-history">
+      <div class="card-h"><h2>История и сравнение</h2></div>
+      <div class="card-b">
+        <div class="history" id="historyBody"></div>
+        <table class="cmp">
+          <thead><tr><th class="lbl">Параметр</th><th>Camry 2.5</th><th class="win">Camry 2.5 ✦</th><th>Mazda 6</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">Цена</td><td>1 720 000</td><td class="win">1 850 000</td><td>1 690 000</td></tr>
+            <tr><td class="lbl">Ремонт (макс)</td><td>180 000</td><td class="win">90 000</td><td>140 000</td></tr>
+            <tr><td class="lbl">Risk score</td><td>54%</td><td class="win">22%</td><td>41%</td></tr>
+            <tr><td class="lbl">Вердикт</td><td><span class="pill caution">Осторожно</span></td><td class="win"><span class="pill safe">Покупать</span></td><td><span class="pill caution">Осторожно</span></td></tr>
+          </tbody>
+        </table>
+        <button class="btn btn-primary act-full" style="margin-top:16px">🏆 Выбрать лучший вариант</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ASIDE: VERDICT (block 2) -->
+  <aside class="aside" id="block-verdict">
+    <div class="verdict">
+      <div class="verdict-top safe">
+        <div class="vstatus">✓ Покупать</div>
+        <div class="vsub">Toyota Camry 2.5 · 2017 · 98 000 км · 1 850 000 ₽</div>
+        <div class="gauge">
+          <svg width="120" height="120">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="10"/>
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="245"/>
+          </svg>
+          <div class="num"><div><b>22%</b><span>risk score</span></div></div>
+        </div>
+      </div>
+      <div class="verdict-b">
+        <div class="kv"><span class="k">Диапазон ремонта</span><span class="v big">34–90К ₽</span></div>
+        <div class="kv"><span class="k">Критичных рисков (P1)</span><span class="v">1</span></div>
+        <div class="kv"><span class="k">Запас по цене рынка</span><span class="v" style="color:var(--safe)">+4%</span></div>
+        <div class="summary-txt">Надёжная модель с прозрачной историей. Серьёзных рисков по кузову и двигателю не выявлено. Основное — проверить реальный пробег и плановый износ подвески. При торге −40–60К ремонт окупается.</div>
+        <div class="act-row">
+          <button class="btn btn-soft">💾 Сохранить</button>
+          <button class="btn btn-soft">🔗 Поделиться</button>
+        </div>
+        <button class="btn btn-primary act-full" onclick="document.getElementById('block-checklist').scrollIntoView({behavior:'smooth'})">📋 Открыть чеклист осмотра</button>
+      </div>
+    </div>
+  </aside>
+
+</div>
+</div>
+
+<!-- ============ STATE: LOADING ============ -->
+<div id="state-loading" class="state">
+  <div class="wrap">
+    <h2 style="text-align:center;margin-bottom:8px">Анализируем автомобиль…</h2>
+    <p style="text-align:center;color:var(--muted);margin-bottom:26px">Обычно занимает 10–30 секунд</p>
+    <div class="prog"><i></i></div>
+    <div class="steps">
+      <div class="step done"><div class="ic">✓</div><div><div class="t">Парсинг объявления</div><div class="s">Готово · 12 фото, 1 владелец</div></div></div>
+      <div class="step done"><div class="ic">✓</div><div><div class="t">Анализ рисков и слабых мест</div><div class="s">Готово · найдено 5 рисков</div></div></div>
+      <div class="step active"><div class="ic">●</div><div><div class="t">Подбор запчастей и цен</div><div class="s">Проверяем наличие и стоимость…</div></div></div>
+      <div class="step"><div class="ic">4</div><div><div class="t">Расчёт сметы и вердикта</div><div class="s">Ожидание</div></div></div>
+    </div>
+    <div class="wrap" style="max-width:700px;margin:0 auto">
+      <div class="skel" style="height:120px;margin-bottom:14px"></div>
+      <div class="skel" style="height:80px;margin-bottom:14px"></div>
+      <div class="skel" style="height:80px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STATE: CAPTCHA / BLOCKED ============ -->
+<div id="state-captcha" class="state">
+  <div class="wrap empty-box">
+    <div class="big-ic">🛡️</div>
+    <h2>Площадка попросила проверку (captcha)</h2>
+    <p>Сайт объявления временно ограничил автоматический доступ. Это бывает при частых запросах — данные не потеряны.</p>
+    <div class="state-note warn">
+      <span class="n-ic">🔄</span>
+      <div><h3>Что можно сделать</h3>
+        <ol class="steplist">
+          <li>Повторить через прокси — мы сменим IP и попробуем снова</li>
+          <li>Подождать 2–3 минуты и нажать «Повторить»</li>
+          <li>Заполнить характеристики вручную — анализ пройдёт без парсинга</li>
+        </ol>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-primary">🔄 Повторить через прокси</button>
+      <button class="btn btn-soft">✍️ Заполнить вручную</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STATE: ERROR ============ -->
+<div id="state-error" class="state">
+  <div class="wrap empty-box">
+    <div class="big-ic">⚠️</div>
+    <h2>Не удалось завершить анализ</h2>
+    <p>Объявление открылось, но в нём не хватает данных для надёжной оценки.</p>
+    <div class="state-note err">
+      <span class="n-ic">🔍</span>
+      <div><h3>Что именно не получилось</h3>
+        <p>Не распознаны: <b>год выпуска</b> и <b>пробег</b>. Без них смета ремонта будет неточной.</p>
+        <ol class="steplist">
+          <li>Укажите год и пробег вручную — займёт 10 секунд</li>
+          <li>Или вставьте ссылку на другое объявление этого авто</li>
+        </ol>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+      <button class="btn btn-primary">✍️ Дозаполнить данные</button>
+      <button class="btn btn-soft">↩️ Попробовать снова</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STATE: NO DATA / EMPTY ============ -->
+<div id="state-empty" class="state">
+  <div class="wrap empty-box">
+    <div class="big-ic">🚘</div>
+    <h2>Пока нет проверок</h2>
+    <p>Вставьте ссылку на объявление вверху — и через полминуты получите риски, смету и чеклист. Можно начать с примера:</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-soft" onclick="setState('results')">🔹 Toyota Camry 2.5, 2017</button>
+      <button class="btn btn-soft" onclick="setState('results')">🔹 Mazda 6, 2016</button>
+      <button class="btn btn-soft" onclick="setState('results')">🔹 Kia Optima, 2018</button>
+    </div>
+    <div class="state-note" style="margin-top:22px">
+      <span class="n-ic">💡</span>
+      <div><h3>Как это работает</h3>
+        <p>Ссылка → парсинг → анализ рисков → смета ремонта → персональный чеклист для осмотра у продавца.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MOBILE STICKY BAR ============ -->
+<nav class="mbar">
+  <a href="#block-verdict">Итог<b>Покупать</b></a>
+  <a href="#block-repair" class="crit">Ремонт<b>34–90К</b></a>
+  <a href="#block-parts">Ссылки<b>9</b></a>
+</nav>
+
+<script>
+/* ---------- DATA ---------- */
+const RISKS=[
+ {id:1,title:'Сомнения в пробеге',prio:1,conf:64,high:true,cost:8000,
+  desc:'Пробег 98 000 км для 2017 года ниже среднего по рынку (~120–140 тыс). Износ руля и накладок педалей выглядит больше заявленного.',
+  rationale:'Несоответствие между указанным пробегом и визуальным износом органов управления — типовой признак корректировки одометра.',
+  evidence:'Текст объявления + фото салона + средний пробег по модели/году.'},
+ {id:2,title:'Подвеска: стойки стабилизатора и сайлентблоки',prio:2,conf:78,high:true,cost:22000,
+  desc:'К пробегу ~100 тыс на Camry обычно требуют замены стойки стабилизатора, реже — сайлентблоки рычагов.',
+  rationale:'Плановый ресурс расходников подвески для этой модели и пробега подходит к концу.',
+  evidence:'Типовые слабости модели + пробег. На фото — оригинальные элементы без следов замены.'},
+ {id:3,title:'Тормоза: диски и колодки передние',prio:2,conf:70,high:false,cost:28000,
+  desc:'Вероятен скорый износ передних дисков и колодок. На фото виден буртик по краю диска.',
+  rationale:'Возраст и пробег + визуальный признак выработки на фотографии колеса.',
+  evidence:'Фото переднего колеса (дефект кромки диска).'},
+ {id:4,title:'Запотевание передних фар',prio:3,conf:55,high:false,cost:6000,
+  desc:'Косметический дефект — лёгкий конденсат в фаре. На работу света обычно не влияет.',
+  rationale:'Распознан конденсат на фото; типичная мелочь для возрастных Camry.',
+  evidence:'Фото передней части кузова.'},
+ {id:5,title:'Лёгкая потливость заднего сальника',prio:3,conf:48,high:false,cost:0,
+  desc:'Информационно: у 2.5 (2AR-FE) встречается лёгкое запотевание сальника. Часто не требует вмешательства.',
+  rationale:'Известная особенность двигателя; прямых доказательств по объявлению нет.',
+  evidence:'Типовые слабости двигателя 2AR-FE.'}
+];
+const REPAIR=[
+ {cat:'Подвеска',work:'Стойки стабилизатора, диагностика рычагов',prio:2,min:8000,max:22000,parts:'Запчасти: 4 000–12 000',seller:false},
+ {cat:'Тормоза',work:'Диски + колодки перед',prio:2,min:12000,max:28000,parts:'Запчасти: 7 000–18 000',seller:false},
+ {cat:'ТО',work:'Масло, фильтры, свечи',prio:3,min:9000,max:16000,parts:'Запчасти: 5 000–9 000',seller:true},
+ {cat:'Оптика',work:'Полировка/просушка фар',prio:3,min:2000,max:6000,parts:'Запчасти: 0–2 000',seller:false},
+ {cat:'Диагностика',work:'Двигатель + АКПП на стенде',prio:1,min:3000,max:8000,parts:'Запчасти: —',seller:false}
+];
+const PARTS=[
+ {name:'Стойки стабилизатора (пара)',why:'Плановый износ подвески к 100 тыс км',avail:'ok',prio:2,conf:78,
+  offers:[{shop:'Exist',price:'2 940 ₽',date:'05.06'},{shop:'Emex',price:'3 180 ₽',date:'04.06'},{shop:'Autodoc',price:'2 760 ₽',date:'05.06'}]},
+ {name:'Тормозные диски перед (TRW)',why:'Выработка по кромке, буртик на фото',avail:'ok',prio:2,conf:70,
+  offers:[{shop:'Exist',price:'6 420 ₽',date:'05.06'},{shop:'Emex',price:'6 990 ₽',date:'05.06'}]},
+ {name:'Колодки тормозные перед',why:'Меняются в паре с дисками',avail:'ok',prio:2,conf:70,
+  offers:[{shop:'Autodoc',price:'2 350 ₽',date:'05.06'},{shop:'Emex',price:'2 610 ₽',date:'04.06'}]},
+ {name:'Сальник коленвала задний (OEM Toyota)',why:'На случай подтверждения течи при осмотре',avail:'lim',prio:3,conf:48,
+  offers:[{shop:'Exist',price:'1 180 ₽',date:'03.06'}]}
+];
+const CLAIMS=[
+ {q:'«Недавно меняли масло и колодки»',note:'Замена ТО — учтено в смете при включённом тумблере'},
+ {q:'«Один владелец, не бит, не крашен»',note:'История ДТП и владельцев — сверить по VIN/отчёту'},
+ {q:'«Вложений не требует»',note:'Противоречит плановому износу подвески и тормозов'}
+];
+const WEAK=[
+ {t:'Расход масла на 2.5 (2AR-FE) после 100 тыс',how:'Проверить уровень по щупу, спросить долив между ТО, осмотреть свечи на масло.'},
+ {t:'Помпа ГУР / рейка — стуки',how:'На тест-драйве крутить руль на месте и в движении, слушать стуки и подвывания.'},
+ {t:'Запотевание фар',how:'Осмотреть фары в тёмном боксе/вечером, искать конденсат внутри.'},
+ {t:'Тонкое ЛКП, сколы на капоте',how:'Смотреть капот и пороги на свету под углом, замерить толщиномером.'},
+ {t:'Шумоизоляция арок / коррозия креплений',how:'Заглянуть в колёсные арки, проверить подкрылки и точки крепления.'}
+];
+const CHECK={
+ 'Кузов':[
+   {t:'Зазоры между панелями',s:'Равномерность слева/справа — следы ДТП',full:true},
+   {t:'Толщина ЛКП толщиномером',s:'>200 мкм = перекрас. Капот, двери, крылья',full:false},
+   {t:'Ржавчина: пороги, арки, днище',s:'Фонариком в скрытые зоны',full:true}],
+ 'Двигатель':[
+   {t:'Уровень и цвет масла по щупу',s:'Эмульсия = проблема ГБЦ',full:false},
+   {t:'Подтёки и запах гари в подкапотке',s:'Сальники, прокладки, патрубки',full:true},
+   {t:'Холодный пуск',s:'Просить не прогревать заранее',full:false}],
+ 'КПП':[
+   {t:'Переключения на тест-драйве',s:'АКПП без рывков и задержек',full:false},
+   {t:'Цвет/запах жидкости АКПП',s:'Не должна пахнуть горелым',full:true}],
+ 'Подвеска':[
+   {t:'Стуки на неровностях',s:'Стойки стаба, сайлентблоки',full:false},
+   {t:'Равномерность износа шин',s:'Косвенно о развале/подвеске',full:true}],
+ 'Электрика':[
+   {t:'Стеклоподъёмники, климат, мультимедиа',s:'Прощёлкать все кнопки',full:true},
+   {t:'Ошибки по OBD-II сканеру',s:'Считать и сбросить, проверить повтор',full:false}],
+ 'Документы':[
+   {t:'Сверить VIN: кузов, ПТС, стекло',s:'Совпадение и читаемость',full:false},
+   {t:'Отчёт по истории (ДТП, владельцы, залог)',s:'Сверить с объявлением',full:false},
+   {t:'Сервисная книжка / чеки',s:'Подтверждение заявленных замен',full:true}]
+};
+const HIST=[
+ {car:'Toyota Camry 2.5, 2017',price:'1 850 000 ₽',score:'safe'},
+ {car:'Mazda 6 2.0, 2016',price:'1 690 000 ₽',score:'caution'},
+ {car:'Hyundai Sonata, 2015',price:'1 280 000 ₽',score:'crit'}
+];
+
+/* ---------- RENDER ---------- */
+let sellerOn=false, chkFull=true, riskF='all';
+const sc={1:'b-p1',2:'b-p2',3:'b-p3'},pn={1:'P1',2:'P2',3:'P3'};
+
+function renderRisks(){
+  const el=document.getElementById('riskList');
+  let arr=[...RISKS];
+  const s=document.getElementById('riskSort').value;
+  arr.sort((a,b)=>s==='cost'?b.cost-a.cost:a.prio-b.prio);
+  el.innerHTML=arr.map(r=>{
+    const show=riskF==='all'||(riskF==='high'&&r.high)||(riskF==='p1'&&r.prio===1)||(riskF==='noinfo'&&r.cost>0);
+    return `<div class="risk ${show?'':'gone'}" data-prio="${r.prio}" data-high="${r.high}" data-cost="${r.cost}">
+      <div class="risk-h">
+        <h3>${r.title}</h3>
+        <span class="badge ${sc[r.prio]}">${pn[r.prio]}</span>
+        <span class="conf">${r.conf}%<span class="bar"><i style="width:${r.conf}%"></i></span></span>
+        ${r.cost>0?`<span class="cost-tag">~${r.cost.toLocaleString('ru')} ₽</span>`:'<span class="cost-tag" style="background:var(--surface-2);color:var(--muted)">инфо</span>'}
+      </div>
+      <p>${r.desc}</p>
+      <div class="meta"><b>Почему так:</b> ${r.rationale}<br><b>Источник сигнала:</b> ${r.evidence}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('riskCount').textContent=arr.filter(r=>riskF==='all'||(riskF==='high'&&r.high)||(riskF==='p1'&&r.prio===1)||(riskF==='noinfo'&&r.cost>0)).length;
+}
+function sortRisks(){renderRisks();}
+
+function renderRepair(){
+  const b=document.getElementById('repairBody');
+  b.innerHTML=REPAIR.map(r=>{
+    const dim=(sellerOn&&r.seller);
+    return `<tr style="${dim?'opacity:.45':''}">
+      <td data-l="Категория"><b>${r.cat}</b></td>
+      <td class="desc-cell" data-l="Работы">${r.work}<span class="parts-hint">${r.parts}</span>${dim?'<span class="parts-hint" style="color:var(--safe)">✓ заявлено продавцом</span>':''}</td>
+      <td data-l="Приоритет"><span class="badge ${sc[r.prio]}">${pn[r.prio]}</span></td>
+      <td class="num-cell" data-l="Стоимость">${r.min.toLocaleString('ru')} – ${r.max.toLocaleString('ru')}</td>
+    </tr>`;}).join('');
+  const act=REPAIR.filter(r=>!(sellerOn&&r.seller));
+  const min=act.reduce((s,r)=>s+r.min,0),max=act.reduce((s,r)=>s+r.max,0);
+  document.getElementById('tTotal').textContent=`${min.toLocaleString('ru')} – ${max.toLocaleString('ru')}`;
+  document.getElementById('tParts').textContent=`${Math.round(min*.6).toLocaleString('ru')} – ${Math.round(max*.6).toLocaleString('ru')}`;
+  document.getElementById('tLabor').textContent=`${Math.round(min*.4).toLocaleString('ru')} – ${Math.round(max*.4).toLocaleString('ru')}`;
+}
+function toggleSellerRepairs(){sellerOn=!sellerOn;document.getElementById('sellerToggle').classList.toggle('on',sellerOn);renderRepair();}
+
+function renderParts(){
+  document.getElementById('partsBody').innerHTML=PARTS.map(p=>`
+   <div class="part">
+     <div class="part-main">
+       <h3>${p.name}</h3>
+       <div class="why">${p.why}</div>
+       <span class="avail ${p.avail}">${p.avail==='ok'?'● В наличии':'● Ограничено'}</span>
+       <span class="badge ${sc[p.prio]}" style="margin-left:6px">${pn[p.prio]}</span>
+       <span class="conf" style="margin-left:6px">conf ${p.conf}%</span>
+     </div>
+     <div class="offers">
+       ${p.offers.map(o=>`<div class="offer"><span class="shop">${o.shop}</span><span class="date">проверено ${o.date}</span><span class="price">${o.price}</span></div>`).join('')}
+       <button class="btn btn-soft" style="height:36px;justify-content:center;font-size:12.5px">🔎 Открыть поиск</button>
+     </div>
+   </div>`).join('')+
+   `<div class="vin-note">⚠️ Проверьте совместимость по VIN перед заказом — комплектации Camry различаются.</div>`;
+}
+
+function renderClaims(){
+  document.getElementById('claimsBody').innerHTML=CLAIMS.map(c=>`
+   <div class="claim"><div class="q">${c.q}<small>${c.note}</small></div><span class="tag-unconf">требует подтверждения</span></div>`).join('');
+}
+function renderWeak(){
+  document.getElementById('weakBody').innerHTML=WEAK.map((w,i)=>`
+   <div class="acc-item" ${i===0?'':''}>
+     <div class="acc-head" onclick="this.parentElement.classList.toggle('open');var b=this.nextElementSibling;b.style.maxHeight=this.parentElement.classList.contains('open')?b.scrollHeight+'px':0">
+       <span class="ico">▣</span> ${w.t}<span class="chev">▾</span>
+     </div>
+     <div class="acc-body"><div class="inner"><span class="lbl">Как проверить:</span> ${w.how}<br><button class="add-chk">＋ Добавить в чеклист</button></div></div>
+   </div>`).join('');
+}
+function renderChecklist(){
+  const b=document.getElementById('checklistBody');
+  b.innerHTML=Object.entries(CHECK).map(([sec,items],i)=>{
+    const list=items.filter(it=>chkFull||!it.full);
+    if(!list.length)return'';
+    return `<div class="acc-item ${i===0?'open':''}">
+      <div class="acc-head" onclick="this.parentElement.classList.toggle('open');var bd=this.nextElementSibling;bd.style.maxHeight=this.parentElement.classList.contains('open')?bd.scrollHeight+'px':0">
+        <span class="ico">${secIcon(sec)}</span> ${sec} <span class="cnt" style="margin-left:6px">${list.length}</span><span class="chev">▾</span>
+      </div>
+      <div class="acc-body" ${i===0?'style="max-height:600px"':''}><div class="inner">
+        ${list.map(it=>`<div class="chk-line" onclick="this.classList.toggle('done')"><span class="chk-box">✓</span><span class="chk-txt">${it.t}<small>${it.s}</small></span></div>`).join('')}
+      </div></div>
+    </div>`;}).join('');
+}
+function secIcon(s){return{'Кузов':'🚙','Двигатель':'⚙️','КПП':'🔧','Подвеска':'🛞','Электрика':'🔌','Документы':'📄'}[s]||'▣';}
+function renderHistory(){
+  const cmap={safe:'var(--safe)',caution:'var(--caution)',crit:'var(--crit)'};
+  document.getElementById('historyBody').innerHTML=HIST.map(h=>`
+   <div class="hrow"><span class="dot" style="background:${cmap[h.score]}"></span><span class="car">${h.car}</span><span class="price">${h.price}</span><span class="pill ${h.score}">${h.score==='safe'?'Покупать':h.score==='caution'?'Осторожно':'Отказ'}</span></div>`).join('');
+}
+
+/* ---------- INTERACTIONS ---------- */
+document.getElementById('riskFilter').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  [...e.currentTarget.children].forEach(b=>b.classList.remove('on'));
+  e.target.classList.add('on');riskF=e.target.dataset.f;renderRisks();
+});
+document.getElementById('chkMode').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  [...e.currentTarget.children].forEach(b=>b.classList.remove('on'));
+  e.target.classList.add('on');chkFull=e.target.dataset.m==='full';renderChecklist();
+});
+document.getElementById('demoSwitch').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  [...e.currentTarget.children].forEach(b=>b.classList.remove('on'));
+  e.target.classList.add('on');setState(e.target.dataset.state);
+});
+function setState(s){
+  document.querySelectorAll('.state').forEach(x=>x.classList.remove('show'));
+  document.getElementById('state-'+s).classList.add('show');
+  document.querySelector('.mbar').style.display=(s==='results'&&window.innerWidth<=680)?'grid':'';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function runAnalysis(){
+  setState('loading');
+  document.querySelectorAll('#demoSwitch button').forEach(b=>b.classList.toggle('on',b.dataset.state==='loading'));
+  setTimeout(()=>{setState('results');document.querySelectorAll('#demoSwitch button').forEach(b=>b.classList.toggle('on',b.dataset.state==='results'));},2400);
+}
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const h=document.documentElement;const d=h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme',d?'light':'dark');
+  document.getElementById('themeBtn').textContent=d?'🌙':'☀️';
+});
+
+/* ---------- INIT ---------- */
+renderRisks();renderRepair();renderParts();renderClaims();renderWeak();renderChecklist();renderHistory();
+</script>
+</body>
+</html>

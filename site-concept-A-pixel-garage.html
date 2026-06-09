@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПОДКАПОТ — Концепт A · Pixel Garage</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Manrope:wght@400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06140f;--bg2:#0a1f17;--neon:#4dffa6;--mint:#9bffce;--ink:#eafff5;--muted:#7fa896;--car:#34e08a}
+body{background:var(--bg);color:var(--ink);font-family:'Manrope',system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.px{font-family:'Press Start 2P',monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:0 26px}
+img,svg{display:block}
+
+/* pixel grid bg */
+.gridbg{position:fixed;inset:0;background-image:linear-gradient(rgba(77,255,166,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(77,255,166,.04) 1px,transparent 1px);background-size:32px 32px;z-index:0}
+
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:1px}
+.logo .b{width:30px;height:30px;background:var(--neon);border-radius:6px;display:grid;place-items:center;color:#04130c;box-shadow:0 0 16px var(--neon)}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted)}
+.nav-links a:hover{color:var(--neon)}
+.btn{border:none;cursor:pointer;font-family:inherit;font-weight:800;border-radius:12px;transition:.2s}
+.btn-primary{background:var(--neon);color:#04130c;padding:13px 22px;box-shadow:0 0 22px rgba(77,255,166,.5)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 34px rgba(77,255,166,.8)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.16);padding:13px 22px}
+.btn-ghost:hover{border-color:var(--neon);color:var(--neon)}
+
+.hero{position:relative;z-index:2;text-align:center;padding:36px 0 30px;min-height:78vh;display:flex;flex-direction:column;justify-content:center}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);z-index:-1}
+.g1{width:540px;height:540px;background:rgba(77,255,166,.18);top:0;left:50%;transform:translateX(-50%);animation:pulse 6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.12)}}
+.tag{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:1px;color:var(--neon);border:1px solid rgba(77,255,166,.3);padding:8px 16px;border-radius:30px;margin:0 auto 24px}
+.tag .dot{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 10px var(--neon);animation:blink 1.3s infinite}
+@keyframes blink{50%{opacity:.3}}
+h1{font-size:clamp(34px,7vw,72px);font-weight:800;line-height:1.02;letter-spacing:-1.5px}
+h1 .lite{color:var(--neon);text-shadow:0 0 30px rgba(77,255,166,.5)}
+.hello{font-size:13px;letter-spacing:3px;color:var(--mint);margin-bottom:14px}
+.sub{max-width:540px;margin:22px auto 30px;color:var(--muted);font-size:18px;line-height:1.6}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+.stage{position:relative;margin-top:42px;height:200px;display:flex;align-items:center;justify-content:center}
+#car{width:300px;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 18px 26px rgba(0,0,0,.5)) drop-shadow(0 0 28px rgba(77,255,166,.35))}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+.shadow{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:230px;height:16px;background:radial-gradient(ellipse,rgba(77,255,166,.4),transparent 70%);filter:blur(6px);animation:sh 4s ease-in-out infinite}
+@keyframes sh{0%,100%{width:230px;opacity:.5}50%{width:180px;opacity:.8}}
+.badge{position:absolute;background:rgba(8,24,18,.85);border:1px solid rgba(77,255,166,.28);backdrop-filter:blur(8px);padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:700;display:flex;gap:8px;align-items:center;z-index:3;box-shadow:0 6px 26px rgba(0,0,0,.5)}
+.badge b{color:var(--neon)}
+.b1{top:4%;left:8%;animation:fl 5s ease-in-out infinite}
+.b2{top:16%;right:6%;animation:fl 6s ease-in-out infinite .5s}
+.b3{bottom:28%;left:5%;animation:fl 5.5s ease-in-out infinite .8s}
+.b4{bottom:18%;right:9%;animation:fl 6.5s ease-in-out infinite .3s}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.pixdot{position:absolute;width:10px;height:10px;background:var(--neon);z-index:1;opacity:.6;animation:fl 4s ease-in-out infinite}
+
+/* trust strip */
+.trust{position:relative;z-index:2;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:24px 0 60px}
+.tcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:20px 26px;min-width:150px;text-align:center}
+.tcard b{display:block;font-size:30px;color:var(--neon);text-shadow:0 0 16px rgba(77,255,166,.4)}
+.tcard span{font-size:12px;color:var(--muted);letter-spacing:.5px}
+
+/* how */
+.how{position:relative;z-index:2;padding:30px 0 80px}
+.how h2{text-align:center;font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.how .lead{text-align:center;color:var(--muted);margin-bottom:36px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.step{background:var(--bg2);border:1px solid rgba(77,255,166,.12);border-radius:18px;padding:24px;transition:.2s}
+.step:hover{border-color:rgba(77,255,166,.4);transform:translateY(-4px)}
+.step .n{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--neon);margin-bottom:14px}
+.step h3{font-size:18px;margin-bottom:8px}
+.step p{color:var(--muted);font-size:14px;line-height:1.55}
+.foot-note{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
+.pages{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.pages span{font-size:12px;color:var(--muted);border:1px dashed rgba(255,255,255,.15);border-radius:20px;padding:6px 13px}
+</style>
+</head>
+<body>
+<div class="gridbg"></div>
+<div class="wrap">
+  <nav>
+    <div class="logo"><span class="b px" style="font-size:11px">П</span> ПОДКАПОТ</div>
+    <div class="nav-links"><a href="#">Как работает</a><a href="#">Тарифы</a><a href="#">Примеры</a><a href="#">FAQ</a></div>
+    <button class="btn btn-primary">Проверить авто</button>
+  </nav>
+</div>
+
+<section class="hero wrap">
+  <div class="glow g1"></div>
+  <div class="pixdot" style="top:30%;left:18%"></div>
+  <div class="pixdot" style="top:60%;right:16%;animation-delay:1s"></div>
+  <div class="pixdot" style="top:12%;right:24%;width:7px;height:7px;animation-delay:.6s"></div>
+
+  <div class="badge b1">⚠️ Риск: <b>22%</b></div>
+  <div class="badge b2">🔧 Ремонт: <b>34–90К</b></div>
+  <div class="badge b3">📋 Чеклист: <b>23 пункта</b></div>
+  <div class="badge b4">🔎 VIN: <b>чисто</b></div>
+
+  <div>
+    <div class="tag"><span class="dot"></span> TELEGRAM-БОТ · SAAS</div>
+    <div class="hello px">HELLO, DRIVER</div>
+    <h1>Проверь тачку<br><span class="lite">до встречи</span> с продавцом</h1>
+    <p class="sub">Кидаешь ссылку на объявление — бот находит риски, считает ремонт и собирает чеклист осмотра. За 30 секунд.</p>
+    <div class="cta">
+      <button class="btn btn-primary">⚡ Закинуть ссылку</button>
+      <button class="btn btn-ghost">Смотреть пример отчёта →</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg id="car" viewBox="0 0 252 99"></svg>
+    <div class="shadow"></div>
+  </div>
+</section>
+
+<div class="wrap trust">
+  <div class="tcard"><b>30с</b><span>СРЕДНИЙ АНАЛИЗ</span></div>
+  <div class="tcard"><b>120+</b><span>ПУНКТОВ ПРОВЕРКИ</span></div>
+  <div class="tcard"><b>40К ₽</b><span>СРЕДНЯЯ ЭКОНОМИЯ</span></div>
+  <div class="tcard"><b>2 рынка</b><span>ПОКУПКА · ПЕРЕПРОДАЖА</span></div>
+</div>
+
+<section class="how wrap">
+  <h2>Как это работает</h2>
+  <p class="lead">Четыре шага от ссылки до решения «брать или бежать».</p>
+  <div class="steps">
+    <div class="step"><div class="n">01</div><h3>Ссылка или вручную</h3><p>Вставь объявление с любой площадки или заполни марку, год, пробег и цену сам.</p></div>
+    <div class="step"><div class="n">02</div><h3>Фото и дефекты</h3><p>Добавь фото и то, что заметил по объявлению или со слов продавца.</p></div>
+    <div class="step"><div class="n">03</div><h3>Риски и чеклист</h3><p>Получи слабые места модели и персональный чеклист для очного осмотра.</p></div>
+    <div class="step"><div class="n">04</div><h3>Смета и вердикт</h3><p>Узнай стоимость ремонта, выгоду перепродажи и итог: брать / проверять / отказ.</p></div>
+  </div>
+  <p class="foot-note">Это многостраничный сайт. Страницы, которые соберу под выбранный стиль:</p>
+  <div class="pages"><span>Главная</span><span>Отчёт по авто</span><span>Запчасти и ссылки</span><span>Чеклист осмотра</span><span>Сравнение авто</span><span>Тарифы</span><span>FAQ</span></div>
+</section>
+
+<script>
+const CAR=[
+"                            ",
+"         oooooooooo         ",
+"        oggggggggggo        ",
+"     ooooggggggggggoooo     ",
+"    occcccccccccccccccco    ",
+"   occccccccccccccccccccho  ",
+"   occccccccccccccccccccho  ",
+"    occccccccccccccccccco   ",
+"      tttt       tttt       ",
+"      tmmt       tmmt       ",
+"      tttt       tttt       "
+];
+const COL={o:'#04130c',c:getComputedStyle(document.documentElement).getPropertyValue('--car').trim(),g:'#bdf6df',h:'#ffd23f',t:'#0a120e',m:'#cfe9dd'};
+const PX=9,svg=document.getElementById('car');let s='';
+CAR.forEach((row,y)=>{[...row].forEach((ch,x)=>{if(ch!==' ')s+=`<rect x="${x*PX}" y="${y*PX}" width="${PX}" height="${PX}" fill="${COL[ch]}"/>`;});});
+svg.innerHTML=s;
+</script>
+</body>
+</html>

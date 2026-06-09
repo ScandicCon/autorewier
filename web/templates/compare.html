@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Сравнение авто — AutoRewier{% endblock %}
+
+{% block content %}
+
+<!-- Шапка страницы -->
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Аналитика</p>
+    <h1>Сравнение автомобилей</h1>
+    <p class="muted" style="margin:0">
+      {% if cars %}Сравниваем {{ cars|length }} варианта{% endif %}
+    </p>
+  </div>
+  <a href="/cabinet" class="btn btn-ghost btn-sm">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    К истории
+  </a>
+</div>
+
+{% if not cars %}
+<!-- Нет данных -->
+<div class="empty-state">
+  <div class="empty-icon" aria-hidden="true">⚖️</div>
+  <h2>Не выбраны авто для сравнения</h2>
+  <p>Вернитесь в кабинет, выберите 2–3 проверки и нажмите «Сравнить».</p>
+  <a href="/cabinet" class="btn btn-lg">Вернуться в кабинет</a>
+</div>
+
+{% else %}
+
+{% set winner = cars[0] %}
+{% set winner_rep = winner.post_report or winner.pre_report or {} %}
+
+<!-- ====== ПОБЕДИТЕЛЬ ====== -->
+<div class="winner-card" role="region" aria-label="Лучший вариант">
+  <div class="winner-badge" aria-hidden="true">🏆</div>
+  <div class="winner-info">
+    <p class="eyebrow" style="color:var(--ok)">Лучший выбор</p>
+    <h2>{{ winner.brand or '?' }} {{ winner.model or '' }} {{ winner.year or '' }}</h2>
+    <p>
+      {% if winner_rep and winner_rep.verdict_label %}
+        Вердикт: <span style="color:var(--ok);font-weight:700">{{ winner_rep.verdict_label }}</span>
+        {% if winner.repair_max_rub %}
+          · Ремонт до {{ '{:,}'.format(winner.repair_max_rub).replace(',', ' ') }} ₽
+        {% endif %}
+        {% if winner.price_rub %}
+          · Цена {{ '{:,}'.format(winner.price_rub).replace(',', ' ') }} ₽
+        {% endif %}
+      {% else %}
+        Наименьший риск по данным проверок
+      {% endif %}
+    </p>
+  </div>
+  <a href="/cabinet/inspection/{{ winner.id }}" class="btn btn-sm" style="flex-shrink:0">Открыть отчёт</a>
+</div>
+
+<!-- ====== СВОДНАЯ ТАБЛИЦА ====== -->
+<div class="compare-table-wrap" role="region" aria-label="Сравнительная таблица" tabindex="0">
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Параметр</th>
+        {% for car in cars %}
+          {% set is_winner = loop.first %}
+          <th class="{{ 'winner-col' if is_winner else '' }}">
+            {% if is_winner %}
+              <span style="
+                font-size:0.72rem;
+                background:var(--ok);
+                color:#fff;
+                padding:0.15rem 0.5rem;
+                border-radius:var(--r-full);
+                font-weight:700;
+                display:inline-block;
+                margin-bottom:0.35rem;
+              ">Лучший</span><br>
+            {% endif %}
+            {{ car.brand or '?' }} {{ car.model or '' }}<br>
+            <span style="font-weight:400;color:var(--muted);font-size:0.82rem">{{ car.year or '' }}</span>
+          </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- Ссылка -->
+      <tr>
+        <td>Проверка</td>
+        {% for car in cars %}
+        <td>
+          <a href="/cabinet/inspection/{{ car.id }}" style="color:var(--accent);font-size:0.88rem;font-family:monospace">#{{ car.id }}</a>
+        </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Вердикт -->
+      <tr>
+        <td>Вердикт</td>
+        {% for car in cars %}
+          {% set rep = car.post_report or car.pre_report or {} %}
+          <td>
+            {% if car.verdict %}
+              <span class="verdict {{ car.verdict.value }}">
+                {{ rep.verdict_label if rep and rep.verdict_label else car.verdict.value }}
+              </span>
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Риск-скор -->
+      <tr>
+        <td>Количество рисков</td>
+        {% set min_risks = namespace(val=9999) %}
+        {% for car in cars %}
+          {% set rep = car.post_report or car.pre_report or {} %}
+          {% set cnt = (rep.risks or [])|length if rep else 0 %}
+          {% if cnt < min_risks.val %}{% set min_risks.val = cnt %}{% endif %}
+        {% endfor %}
+        {% for car in cars %}
+          {% set rep = car.post_report or car.pre_report or {} %}
+          {% set cnt = (rep.risks or [])|length if rep else 0 %}
+          <td class="{{ 'best' if cnt == min_risks.val else ('worst' if cnt > min_risks.val + 1 else '') }}">
+            {{ cnt }}
+          </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Цена -->
+      <tr>
+        <td>Цена продавца</td>
+        {% set min_price = namespace(val=9999999999) %}
+        {% for car in cars %}
+          {% if car.price_rub and car.price_rub < min_price.val %}
+            {% set min_price.val = car.price_rub %}
+          {% endif %}
+        {% endfor %}
+        {% for car in cars %}
+          <td class="{{ 'best' if car.price_rub and car.price_rub == min_price.val else '' }}">
+            {% if car.price_rub %}{{ '{:,}'.format(car.price_rub).replace(',', ' ') }} ₽{% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Ремонт мин -->
+      <tr>
+        <td>Ремонт (мин.)</td>
+        {% set min_rep_min = namespace(val=9999999999) %}
+        {% for car in cars %}
+          {% if car.repair_min_rub and car.repair_min_rub < min_rep_min.val %}
+            {% set min_rep_min.val = car.repair_min_rub %}
+          {% endif %}
+        {% endfor %}
+        {% for car in cars %}
+          <td class="{{ 'best' if car.repair_min_rub and car.repair_min_rub == min_rep_min.val else '' }}">
+            {% if car.repair_min_rub %}{{ '{:,}'.format(car.repair_min_rub).replace(',', ' ') }} ₽{% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Ремонт макс -->
+      <tr>
+        <td>Ремонт (макс.)</td>
+        {% set min_rep_max = namespace(val=9999999999) %}
+        {% for car in cars %}
+          {% if car.repair_max_rub and car.repair_max_rub < min_rep_max.val %}
+            {% set min_rep_max.val = car.repair_max_rub %}
+          {% endif %}
+        {% endfor %}
+        {% for car in cars %}
+          <td class="{{ 'best' if car.repair_max_rub and car.repair_max_rub == min_rep_max.val else '' }}">
+            {% if car.repair_max_rub %}{{ '{:,}'.format(car.repair_max_rub).replace(',', ' ') }} ₽{% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Итоговая стоимость (цена + макс ремонт) -->
+      <tr>
+        <td style="font-weight:600">
+          Итого (цена + ремонт)
+          <div style="font-size:0.78rem;color:var(--muted);font-weight:400">Полная стоимость входа</div>
+        </td>
+        {% set min_total = namespace(val=9999999999) %}
+        {% for car in cars %}
+          {% set total = (car.price_rub or 0) + (car.repair_max_rub or 0) %}
+          {% if total > 0 and total < min_total.val %}{% set min_total.val = total %}{% endif %}
+        {% endfor %}
+        {% for car in cars %}
+          {% set total = (car.price_rub or 0) + (car.repair_max_rub or 0) %}
+          <td style="font-weight:700" class="{{ 'best' if total > 0 and total == min_total.val else '' }}">
+            {% if total > 0 %}{{ '{:,}'.format(total).replace(',', ' ') }} ₽{% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+
+      <!-- Дата создания -->
+      <tr>
+        <td>Дата проверки</td>
+        {% for car in cars %}
+          <td class="muted" style="font-size:0.88rem">{{ car.created_at.strftime('%d.%m.%Y') if car.created_at else '—' }}</td>
+        {% endfor %}
+      </tr>
+
+      <!-- Действия -->
+      <tr>
+        <td></td>
+        {% for car in cars %}
+          <td>
+            <a href="/cabinet/inspection/{{ car.id }}" class="btn btn-sm {{ 'btn-outline' if not loop.first else '' }}" style="width:100%;justify-content:center">
+              {% if loop.first %}Открыть{% else %}Смотреть{% endif %}
+            </a>
+          </td>
+        {% endfor %}
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+
+<!-- Мобильное accordion (альтернативный вид) -->
+<div style="margin-top:1.5rem" class="reveal">
+  <details style="margin-bottom:0">
+    <summary style="cursor:pointer;color:var(--muted);font-size:0.9rem;padding:0.5rem 0;user-select:none">
+      Показать детали по каждому авто
+    </summary>
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:1rem;
+      margin-top:1rem;
+    ">
+      {% for car in cars %}
+        {% set rep = car.post_report or car.pre_report or {} %}
+        <div class="card" style="{{ 'border-color:rgba(52,212,122,0.25)' if loop.first else '' }}">
+          {% if loop.first %}
+            <span class="badge ok" style="margin-bottom:0.7rem">Лучший вариант</span>
+          {% endif %}
+          <h3>{{ car.brand or '?' }} {{ car.model or '' }} {{ car.year or '' }}</h3>
+          {% if car.verdict %}
+            <span class="verdict {{ car.verdict.value }}" style="margin-bottom:0.75rem;display:inline-flex">
+              {{ rep.verdict_label if rep and rep.verdict_label else car.verdict.value }}
+            </span>
+          {% endif %}
+          {% if rep and rep.summary %}
+          <p style="color:var(--muted);font-size:0.9rem;margin:0.5rem 0 1rem">{{ rep.summary[:120] }}{% if rep.summary|length > 120 %}…{% endif %}</p>
+          {% endif %}
+          <a href="/cabinet/inspection/{{ car.id }}" class="btn btn-sm btn-outline" style="width:100%;justify-content:center">Открыть отчёт</a>
+        </div>
+      {% endfor %}
+    </div>
+  </details>
+</div>
+
+{% endif %}
+
+{% endblock %}
