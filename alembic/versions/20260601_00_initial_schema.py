@@ -16,13 +16,31 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # ENUMs — use IF NOT EXISTS so re-deploys don't fail
-    op.execute("CREATE TYPE IF NOT EXISTS subscriptionplan AS ENUM ('free', 'pro')")
-    op.execute("CREATE TYPE IF NOT EXISTS paymentstatus AS ENUM ('pending', 'succeeded', 'failed', 'cancelled')")
-    op.execute("CREATE TYPE IF NOT EXISTS inspectionstage AS ENUM ('draft', 'pre_inspection', 'post_inspection')")
-    op.execute("CREATE TYPE IF NOT EXISTS verdict AS ENUM ('worth_looking', 'caution', 'skip')")
-    op.execute("CREATE TYPE IF NOT EXISTS listingstatus AS ENUM ('active', 'sold', 'deleted', 'price_changed')")
-    op.execute("CREATE TYPE IF NOT EXISTS changetype AS ENUM ('price_drop', 'price_increase', 'status_change', 'deleted')")
+    # ENUMs — use DO/EXCEPTION so re-deploys don't fail on duplicate type
+    op.execute("""
+DO $$ BEGIN CREATE TYPE subscriptionplan AS ENUM ('free', 'pro');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+""")
+    op.execute("""
+DO $$ BEGIN CREATE TYPE paymentstatus AS ENUM ('pending', 'succeeded', 'failed', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+""")
+    op.execute("""
+DO $$ BEGIN CREATE TYPE inspectionstage AS ENUM ('draft', 'pre_inspection', 'post_inspection');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+""")
+    op.execute("""
+DO $$ BEGIN CREATE TYPE verdict AS ENUM ('worth_looking', 'caution', 'skip');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+""")
+    op.execute("""
+DO $$ BEGIN CREATE TYPE listingstatus AS ENUM ('active', 'sold', 'deleted', 'price_changed');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+""")
+    op.execute("""
+DO $$ BEGIN CREATE TYPE changetype AS ENUM ('price_drop', 'price_increase', 'status_change', 'deleted');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+""")
 
 
     # users
