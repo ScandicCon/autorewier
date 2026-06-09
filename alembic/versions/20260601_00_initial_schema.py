@@ -16,6 +16,17 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Idempotency guard — skip if tables already exist (e.g. from a partial previous run)
+    bind = op.get_bind()
+    already_exists = bind.execute(
+        sa.text(
+            "SELECT EXISTS(SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema='public' AND table_name='users')"
+        )
+    ).scalar()
+    if already_exists:
+        return
+
     # ENUMs — use DO/EXCEPTION so re-deploys don't fail on duplicate type
     op.execute("""
 DO $$ BEGIN CREATE TYPE subscriptionplan AS ENUM ('free', 'pro');
