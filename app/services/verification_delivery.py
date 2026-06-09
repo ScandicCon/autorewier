@@ -1,8 +1,11 @@
+import logging
 import smtplib
 from dataclasses import dataclass
 from email.message import EmailMessage
 
 from app.config import settings
+
+log = logging.getLogger("autorewier.smtp")
 
 
 @dataclass
@@ -75,11 +78,12 @@ class SmtpVerificationEmailProvider(VerificationEmailProvider):
                 provider="smtp",
                 message="Код подтверждения отправлен на email.",
             )
-        except Exception:
+        except Exception as e:
+            log.error("SMTP send_code failed: %s", e, exc_info=True)
             return DeliveryResult(
                 delivered=False,
                 provider="smtp",
-                message="SMTP delivery failed",
+                message=f"SMTP delivery failed: {e}",
             )
 
     async def send_reset_link(self, target_email: str, reset_link: str) -> DeliveryResult:
@@ -105,11 +109,12 @@ class SmtpVerificationEmailProvider(VerificationEmailProvider):
                 provider="smtp",
                 message="Ссылка восстановления пароля отправлена на email.",
             )
-        except Exception:
+        except Exception as e:
+            log.error("SMTP send_reset_link failed: %s", e, exc_info=True)
             return DeliveryResult(
                 delivered=False,
                 provider="smtp",
-                message="SMTP delivery failed",
+                message=f"SMTP delivery failed: {e}",
             )
 
 
