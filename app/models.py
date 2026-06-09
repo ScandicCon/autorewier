@@ -6,6 +6,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
+# Make SQLAlchemy store enum .value ("free") not .name ("FREE")
+_VAL = lambda obj: [e.value for e in obj]  # noqa: E731
+
 
 class ListingStatus(str, enum.Enum):
     ACTIVE = "active"
@@ -63,7 +66,7 @@ class User(Base):
     session_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     subscription_plan: Mapped[SubscriptionPlan] = mapped_column(
-        Enum(SubscriptionPlan), default=SubscriptionPlan.FREE
+        Enum(SubscriptionPlan, values_callable=_VAL), default=SubscriptionPlan.FREE
     )
     subscription_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     inspections_this_month: Mapped[int] = mapped_column(Integer, default=0)
@@ -85,9 +88,9 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     amount_rub: Mapped[int] = mapped_column(Integer)
-    plan: Mapped[SubscriptionPlan] = mapped_column(Enum(SubscriptionPlan))
+    plan: Mapped[SubscriptionPlan] = mapped_column(Enum(SubscriptionPlan, values_callable=_VAL))
     status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus), default=PaymentStatus.PENDING
+        Enum(PaymentStatus, values_callable=_VAL), default=PaymentStatus.PENDING
     )
     yookassa_payment_id: Mapped[str | None] = mapped_column(String(64), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -126,7 +129,7 @@ class Inspection(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     stage: Mapped[InspectionStage] = mapped_column(
-        Enum(InspectionStage), default=InspectionStage.DRAFT
+        Enum(InspectionStage, values_callable=_VAL), default=InspectionStage.DRAFT
     )
 
     listing_url: Mapped[str | None] = mapped_column(String(1024))
@@ -158,7 +161,7 @@ class Inspection(Base):
     target_resale_price: Mapped[int | None] = mapped_column(Integer)
     final_recommendation: Mapped[str | None] = mapped_column(String(32))
 
-    verdict: Mapped[Verdict | None] = mapped_column(Enum(Verdict))
+    verdict: Mapped[Verdict | None] = mapped_column(Enum(Verdict, values_callable=_VAL))
     pre_report: Mapped[dict | None] = mapped_column(JSON)
     post_report: Mapped[dict | None] = mapped_column(JSON)
     parts_pricing: Mapped[dict | None] = mapped_column(JSON)
@@ -189,7 +192,7 @@ class MonitoredListing(Base):
     platform: Mapped[str | None] = mapped_column(String(64))
     last_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_status: Mapped[ListingStatus] = mapped_column(
-        Enum(ListingStatus), default=ListingStatus.ACTIVE
+        Enum(ListingStatus, values_callable=_VAL), default=ListingStatus.ACTIVE
     )
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -211,7 +214,7 @@ class ListingChangeEvent(Base):
     monitored_listing_id: Mapped[int] = mapped_column(
         ForeignKey("monitored_listings.id"), index=True
     )
-    change_type: Mapped[ChangeType] = mapped_column(Enum(ChangeType))
+    change_type: Mapped[ChangeType] = mapped_column(Enum(ChangeType, values_callable=_VAL))
     old_value: Mapped[str | None] = mapped_column(String(256), nullable=True)
     new_value: Mapped[str | None] = mapped_column(String(256), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
