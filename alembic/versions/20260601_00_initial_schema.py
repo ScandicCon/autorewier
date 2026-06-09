@@ -16,24 +16,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # ENUMs
-    subscription_plan = sa.Enum("free", "pro", name="subscriptionplan")
-    subscription_plan.create(op.get_bind(), checkfirst=True)
+    # ENUMs — use IF NOT EXISTS so re-deploys don't fail
+    op.execute("CREATE TYPE IF NOT EXISTS subscriptionplan AS ENUM ('free', 'pro')")
+    op.execute("CREATE TYPE IF NOT EXISTS paymentstatus AS ENUM ('pending', 'succeeded', 'failed', 'cancelled')")
+    op.execute("CREATE TYPE IF NOT EXISTS inspectionstage AS ENUM ('draft', 'pre_inspection', 'post_inspection')")
+    op.execute("CREATE TYPE IF NOT EXISTS verdict AS ENUM ('worth_looking', 'caution', 'skip')")
+    op.execute("CREATE TYPE IF NOT EXISTS listingstatus AS ENUM ('active', 'sold', 'deleted', 'price_changed')")
+    op.execute("CREATE TYPE IF NOT EXISTS changetype AS ENUM ('price_drop', 'price_increase', 'status_change', 'deleted')")
 
-    payment_status = sa.Enum("pending", "succeeded", "failed", "cancelled", name="paymentstatus")
-    payment_status.create(op.get_bind(), checkfirst=True)
-
-    inspection_stage = sa.Enum("draft", "pre_inspection", "post_inspection", name="inspectionstage")
-    inspection_stage.create(op.get_bind(), checkfirst=True)
-
-    verdict_enum = sa.Enum("worth_looking", "caution", "skip", name="verdict")
-    verdict_enum.create(op.get_bind(), checkfirst=True)
-
-    listing_status = sa.Enum("active", "sold", "deleted", "price_changed", name="listingstatus")
-    listing_status.create(op.get_bind(), checkfirst=True)
-
-    change_type = sa.Enum("price_drop", "price_increase", "status_change", "deleted", name="changetype")
-    change_type.create(op.get_bind(), checkfirst=True)
 
     # users
     op.create_table(
@@ -53,7 +43,7 @@ def upgrade() -> None:
         sa.Column("session_token", sa.String(64), nullable=True),
         sa.Column("session_issued_at", sa.DateTime(), nullable=True),
         sa.Column("session_expires_at", sa.DateTime(), nullable=True),
-        sa.Column("subscription_plan", sa.Enum("free", "pro", name="subscriptionplan"), nullable=False, server_default="free"),
+        sa.Column("subscription_plan", sa.Enum("free", "pro", name="subscriptionplan", create_type=False), nullable=False, server_default="free"),
         sa.Column("subscription_until", sa.DateTime(), nullable=True),
         sa.Column("inspections_this_month", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("month_reset_key", sa.String(7), nullable=True),
@@ -72,8 +62,8 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=False),
         sa.Column("amount_rub", sa.Integer(), nullable=False),
-        sa.Column("plan", sa.Enum("free", "pro", name="subscriptionplan"), nullable=False),
-        sa.Column("status", sa.Enum("pending", "succeeded", "failed", "cancelled", name="paymentstatus"), nullable=False),
+        sa.Column("plan", sa.Enum("free", "pro", name="subscriptionplan", create_type=False), nullable=False),
+        sa.Column("status", sa.Enum("pending", "succeeded", "failed", "cancelled", name="paymentstatus", create_type=False), nullable=False),
         sa.Column("yookassa_payment_id", sa.String(64), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -115,7 +105,7 @@ def upgrade() -> None:
         "inspections",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=False),
-        sa.Column("stage", sa.Enum("draft", "pre_inspection", "post_inspection", name="inspectionstage"), nullable=False),
+        sa.Column("stage", sa.Enum("draft", "pre_inspection", "post_inspection", name="inspectionstage", create_type=False), nullable=False),
         sa.Column("listing_url", sa.String(1024), nullable=True),
         sa.Column("platform", sa.String(64), nullable=True),
         sa.Column("brand", sa.String(128), nullable=True),
@@ -141,7 +131,7 @@ def upgrade() -> None:
         sa.Column("is_reseller", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("target_resale_price", sa.Integer(), nullable=True),
         sa.Column("final_recommendation", sa.String(32), nullable=True),
-        sa.Column("verdict", sa.Enum("worth_looking", "caution", "skip", name="verdict"), nullable=True),
+        sa.Column("verdict", sa.Enum("worth_looking", "caution", "skip", name="verdict", create_type=False), nullable=True),
         sa.Column("pre_report", sa.JSON(), nullable=True),
         sa.Column("post_report", sa.JSON(), nullable=True),
         sa.Column("parts_pricing", sa.JSON(), nullable=True),
@@ -162,7 +152,7 @@ def upgrade() -> None:
         sa.Column("url", sa.String(1024), nullable=False),
         sa.Column("platform", sa.String(64), nullable=True),
         sa.Column("last_price", sa.Integer(), nullable=True),
-        sa.Column("last_status", sa.Enum("active", "sold", "deleted", "price_changed", name="listingstatus"), nullable=False),
+        sa.Column("last_status", sa.Enum("active", "sold", "deleted", "price_changed", name="listingstatus", create_type=False), nullable=False),
         sa.Column("last_checked_at", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
@@ -176,7 +166,7 @@ def upgrade() -> None:
         "listing_change_events",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("monitored_listing_id", sa.Integer(), sa.ForeignKey("monitored_listings.id"), nullable=False),
-        sa.Column("change_type", sa.Enum("price_drop", "price_increase", "status_change", "deleted", name="changetype"), nullable=False),
+        sa.Column("change_type", sa.Enum("price_drop", "price_increase", "status_change", "deleted", name="changetype", create_type=False), nullable=False),
         sa.Column("old_value", sa.String(256), nullable=True),
         sa.Column("new_value", sa.String(256), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
