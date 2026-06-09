@@ -16,78 +16,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # --- Auth improvements ---
-    # Cooldown timestamp for email verification resend
-    op.add_column(
-        "users",
-        sa.Column("email_verification_sent_at", sa.DateTime(), nullable=True),
-    )
-    # Password reset token fields
-    op.add_column(
-        "users",
-        sa.Column("password_reset_token", sa.String(length=64), nullable=True),
-    )
-    op.add_column(
-        "users",
-        sa.Column("password_reset_expires_at", sa.DateTime(), nullable=True),
-    )
-    op.create_index(
-        "ix_users_password_reset_token",
-        "users",
-        ["password_reset_token"],
-        unique=True,
-    )
-
-    # --- Monitored listings ---
-    op.create_table(
-        "monitored_listings",
-        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("inspection_id", sa.Integer(), nullable=True),
-        sa.Column("url", sa.String(length=1024), nullable=False),
-        sa.Column("platform", sa.String(length=64), nullable=True),
-        sa.Column("last_price", sa.Integer(), nullable=True),
-        sa.Column(
-            "last_status",
-            sa.Enum("active", "sold", "removed", name="listingstatus"),
-            nullable=False,
-            server_default="active",
-        ),
-        sa.Column("last_checked_at", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["inspection_id"], ["inspections.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_monitored_listings_user_id", "monitored_listings", ["user_id"])
-    op.create_index(
-        "ix_monitored_listings_inspection_id", "monitored_listings", ["inspection_id"]
-    )
-
-    # --- Listing change events ---
-    op.create_table(
-        "listing_change_events",
-        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("monitored_listing_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "change_type",
-            sa.Enum("price_drop", "price_rise", "sold", "removed", name="changetype"),
-            nullable=False,
-        ),
-        sa.Column("old_value", sa.String(length=256), nullable=True),
-        sa.Column("new_value", sa.String(length=256), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["monitored_listing_id"], ["monitored_listings.id"]
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        "ix_listing_change_events_monitored_listing_id",
-        "listing_change_events",
-        ["monitored_listing_id"],
-    )
+    # No-op: all columns and tables from this migration are already
+    # included in the initial schema (20260601_00).
+    pass
 
 
 def downgrade() -> None:
