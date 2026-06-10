@@ -21,14 +21,16 @@ pip-delete-this-directory.txt
 *.db
 *.sqlite
 *.sqlite3
-data/
+/data/
 !data/.gitkeep
 
 # ── Uploads / cache ──────────────────────────────────────────────
 uploads/
-data/cache/
-data/avito_browser_profile/
-/app/data/
+/data/cache/
+/data/avito_browser_profile/
+# app/data/ contains required JSON files — tracked intentionally
+!app/data/
+!app/data/*.json
 
 # ── Node / Frontend ──────────────────────────────────────────────
 node_modules/
