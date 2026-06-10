@@ -217,12 +217,15 @@ async def issue_verification_code(
             message = delivery.message
             if delivery.dev_code:
                 message = f"{delivery.message} Код для теста: {delivery.dev_code}"
-        elif settings.is_production:
-            raise ValueError(
-                "Email verification delivery не настроен для production. Настройте SMTP."
-            )
         else:
-            message = "SMTP не настроен, используется безопасный dev fallback."
+            # Delivery failed — log it but don't crash: the code is saved in DB,
+            # the user can still enter it manually if they receive the email later.
+            import logging
+            logging.getLogger("autorewier.smtp").error(
+                "Verification email delivery failed (provider=%s): %s",
+                delivery.provider, delivery.message,
+            )
+            message = f"Не удалось отправить письмо: {delivery.message}"
 
     await session.commit()
     await session.refresh(user)

@@ -105,7 +105,9 @@ async function submit() {
         zone: null,
         note: form.photo_note?.trim() ? `${form.photo_note.trim()} · фото ${i + 1}` : null
       })),
-      require_avito_parse: Boolean(form.listing_url) && source === 'avito'
+      // Only re-parse on backend when the frontend pre-parse succeeded (photos loaded).
+      // If pre-parse failed the user filled data manually — skip the slow backend fetch.
+      require_avito_parse: Boolean(form.listing_url) && source === 'avito' && parsedPhotos.value.length > 0
     })
     router.push(`/app/inspection/${created.id}`)
   } catch (e) {
@@ -266,11 +268,9 @@ async function submit() {
             {{ loading ? 'Запускаем анализ…' : 'Запустить анализ' }}
           </button>
         </div>
+
+        <p v-if="error" class="auth-error-msg" style="margin-top:12px">{{ error }}</p>
       </div>
     </div>
   </div>
-
-  <footer class="footer">
-    <div class="wrap"><div class="copy">© 2026 ПОДКАПОТ</div></div>
-  </footer>
 </template>

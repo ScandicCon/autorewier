@@ -166,28 +166,30 @@ async def create_inspection(
         if data.require_avito_parse and not is_avito_url(url):
             raise ValueError("Укажите ссылку на объявление Avito (avito.ru) или введите данные вручную")
 
-        if is_avito_url(url):
-            parsed = await parse_avito_url(url)
-        else:
-            parsed = await parse_listing_url(url)
+        # Only fetch listing when explicitly requested — avoids Railway timeout.
+        if data.require_avito_parse:
+            if is_avito_url(url):
+                parsed = await parse_avito_url(url)
+            else:
+                parsed = await parse_listing_url(url)
 
-        platform = parsed.platform
-        if data.require_avito_parse and not parsed.parse_ok:
-            raise ValueError(parsed.parse_error or "Не удалось загрузить объявление с Avito")
+            platform = parsed.platform
+            if not parsed.parse_ok:
+                raise ValueError(parsed.parse_error or "Не удалось загрузить объявление с Avito")
 
-        if not isinstance(parsed.vehicle, VehicleInput):
-            raise ValueError("Некорректные данные автомобиля в объявлении")
-        merged = parsed.vehicle.model_dump()
-        if data.vehicle:
-            merged.update(
-                {k: v for k, v in data.vehicle.model_dump().items() if v is not None}
-            )
-        try:
-            vehicle = VehicleInput(**merged)
-        except ValidationError as exc:
-            raise ValueError("Некорректные данные автомобиля в объявлении") from exc
-        if parsed.listing_repairs:
-            listing_repairs_list = parsed.listing_repairs
+            if not isinstance(parsed.vehicle, VehicleInput):
+                raise ValueError("Некорректные данные автомобиля в объявлении")
+            merged = parsed.vehicle.model_dump()
+            if data.vehicle:
+                merged.update(
+                    {k: v for k, v in data.vehicle.model_dump().items() if v is not None}
+                )
+            try:
+                vehicle = VehicleInput(**merged)
+            except ValidationError as exc:
+                raise ValueError("Некорректные данные автомобиля в объявлении") from exc
+            if parsed.listing_repairs:
+                listing_repairs_list = parsed.listing_repairs
 
     if not listing_repairs_list:
         listing_repairs_list = extract_listing_repairs(vehicle.description)

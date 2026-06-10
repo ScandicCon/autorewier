@@ -26,8 +26,8 @@ class VerificationEmailProvider:
 
 class ResendVerificationEmailProvider(VerificationEmailProvider):
     def _from_addr(self) -> str:
-        name = settings.smtp_sender_name or "ПОДКАПОТ"
-        # Use verified domain sender; fall back to onboarding address for testing
+        # ASCII-only sender name avoids encoding issues that trigger Gmail spam filters
+        name = "Podkapot"
         sender = settings.smtp_sender_email.strip() or "onboarding@resend.dev"
         return f"{name} <{sender}>"
 
