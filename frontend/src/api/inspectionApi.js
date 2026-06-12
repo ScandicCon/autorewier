@@ -120,3 +120,14 @@ export async function registerWithConfirm(email, password, passwordConfirm) {
 export async function parseListing(url) {
   return request("/parse-listing", { method: "POST", body: JSON.stringify({ url }) });
 }
+
+export async function requestPasswordReset(email) {
+  return request("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+}
+
+export async function resetPassword(token, newPassword) {
+  return request("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, new_password: newPassword })
+  });
+}

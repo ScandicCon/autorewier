@@ -73,7 +73,7 @@ async function submit() {
           </div>
           <div class="field-row">
             <span></span>
-            <a href="#">Забыли пароль?</a>
+            <router-link to="/forgot-password">Забыли пароль?</router-link>
           </div>
           <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
             <span v-if="loading" class="btn-spinner"></span>
