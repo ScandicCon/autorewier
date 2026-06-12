@@ -45,6 +45,7 @@ def api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
     monkeypatch.setattr(settings, "database_url", test_db_url)
     monkeypatch.setattr(settings, "rate_limit_enabled", False)
+    monkeypatch.setattr(settings, "free_inspections_per_month", 100)
     monkeypatch.setattr(database, "engine", test_engine)
     monkeypatch.setattr(database, "async_session", test_sessionmaker)
 
@@ -64,9 +65,11 @@ def api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 # ---------------------------------------------------------------------------
 
 def _register(client: TestClient, email: str, password: str = "strongpass123") -> str:
-    resp = client.post("/api/v1/auth/register", json={"email": email, "password": password})
+    resp = client.post("/api/v1/auth/register", json={"email": email, "password": password, "password_confirm": password})
     assert resp.status_code == 200
-    token = resp.cookies.get(COOKIE_NAME)
+    login = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert login.status_code == 200, login.text
+    token = login.cookies.get(COOKIE_NAME)
     assert token
     return token
 
@@ -106,7 +109,7 @@ def _compare(client: TestClient, ids: list[int], headers: dict):
     # Попытка POST-эндпоинта (новая фича)
     post_resp = client.post(
         "/api/v1/inspections/compare",
-        json={"ids": ids},
+        json={"inspection_ids": ids},
         headers=headers,
     )
     if post_resp.status_code not in (404, 405):
@@ -167,7 +170,7 @@ def test_compare_result_has_winner(api_client: TestClient):
     # Сначала пробуем POST-эндпоинт с winner
     post_resp = api_client.post(
         "/api/v1/inspections/compare",
-        json={"ids": [id1, id2]},
+        json={"inspection_ids": [id1, id2]},
         headers=headers,
     )
 
@@ -175,7 +178,7 @@ def test_compare_result_has_winner(api_client: TestClient):
         assert post_resp.status_code == 200
         payload = post_resp.json()
         # POST-эндпоинт должен возвращать поле winner
-        assert "winner" in payload, (
+        assert "winner_id" in payload, (
             f"Ожидалось поле 'winner' в ответе, получено: {list(payload.keys())}"
         )
     else:
@@ -219,13 +222,14 @@ def test_compare_wrong_user(api_client: TestClient):
     # B пытается сравнить свою с чужой (id_a)
     post_resp = api_client.post(
         "/api/v1/inspections/compare",
-        json={"ids": [id_b, id_a]},
+        json={"inspection_ids": [id_b, id_a]},
         headers=headers_b,
     )
 
     if post_resp.status_code not in (404, 405):
-        if post_resp.status_code == 403:
-            # Ожидаемый ответ — запрет
+        if post_resp.status_code in (400, 403):
+            # Ожидаемый ответ — запрет или «недостаточно доступных проверок»
+            # (чужая запись исключается, остаётся <2 → 400)
             pass
         elif post_resp.status_code == 200:
             # Альтернативное поведение: чужие записи просто не включаются
@@ -269,7 +273,7 @@ def test_compare_too_many(api_client: TestClient):
 
     post_resp = api_client.post(
         "/api/v1/inspections/compare",
-        json={"ids": ids},  # 4 ids > 3
+        json={"inspection_ids": ids},  # 4 ids > 3
         headers=headers,
     )
 
@@ -294,7 +298,7 @@ def test_compare_single(api_client: TestClient):
 
     post_resp = api_client.post(
         "/api/v1/inspections/compare",
-        json={"ids": [id1]},
+        json={"inspection_ids": [id1]},
         headers=headers,
     )
 

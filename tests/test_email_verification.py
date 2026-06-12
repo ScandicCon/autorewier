@@ -68,9 +68,11 @@ def api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 # ---------------------------------------------------------------------------
 
 def _register(client: TestClient, email: str, password: str = "strongpass123") -> str:
-    resp = client.post("/api/v1/auth/register", json={"email": email, "password": password})
+    resp = client.post("/api/v1/auth/register", json={"email": email, "password": password, "password_confirm": password})
     assert resp.status_code == 200
-    session_token = resp.cookies.get(COOKIE_NAME)
+    login = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert login.status_code == 200, login.text
+    session_token = login.cookies.get(COOKIE_NAME)
     assert session_token
     return session_token
 

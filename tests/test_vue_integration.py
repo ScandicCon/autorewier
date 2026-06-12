@@ -64,11 +64,13 @@ def api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
 def _register(client: TestClient, email: str, password: str = "strongpass123") -> tuple[str, str]:
     """Регистрирует пользователя. Возвращает (session_cookie, bearer_token)."""
-    resp = client.post("/api/v1/auth/register", json={"email": email, "password": password})
+    resp = client.post("/api/v1/auth/register", json={"email": email, "password": password, "password_confirm": password})
     assert resp.status_code == 200, resp.text
-    session_token = resp.cookies.get(COOKIE_NAME)
-    assert session_token, "Ожидался set-cookie после регистрации"
-    bearer = resp.json().get("token", "")
+    login = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert login.status_code == 200, login.text
+    session_token = login.cookies.get(COOKIE_NAME)
+    assert session_token, "Ожидался set-cookie после входа"
+    bearer = login.json().get("token", "")
     return session_token, bearer
 
 
@@ -153,28 +155,26 @@ def test_auth_flow_register_login(api_client: TestClient):
     email = "vue-auth-flow@example.com"
     password = "strongpass123"
 
-    # 1. Регистрация
+    # 1. Регистрация (не логинит автоматически — нужно войти отдельно)
     register_resp = api_client.post(
         "/api/v1/auth/register",
-        json={"email": email, "password": password},
+        json={"email": email, "password": password, "password_confirm": password},
     )
     assert register_resp.status_code == 200, register_resp.text
-    register_cookie = register_resp.cookies.get(COOKIE_NAME)
-    assert register_cookie, "После регистрации ожидался сессионный cookie"
 
-    # 2. Вход (ротация токена — аналогично поведению LoginForm.vue)
+    # 2. Первый вход — выдаётся сессионный cookie
     login_resp = api_client.post(
         "/api/v1/auth/login",
         json={"email": email, "password": password},
     )
     assert login_resp.status_code == 200, login_resp.text
-    login_cookie = login_resp.cookies.get(COOKIE_NAME)
-    assert login_cookie, "После входа ожидался обновлённый сессионный cookie"
+    first_cookie = login_resp.cookies.get(COOKIE_NAME)
+    assert first_cookie, "После входа ожидался сессионный cookie"
 
-    # 3. /api/v1/me с новым cookie возвращает email (fetchCurrentUser)
+    # 3. /api/v1/me с cookie возвращает email (fetchCurrentUser)
     me_resp = api_client.get(
         "/api/v1/me",
-        headers={"Cookie": f"{COOKIE_NAME}={login_cookie}"},
+        headers={"Cookie": f"{COOKIE_NAME}={first_cookie}"},
     )
     assert me_resp.status_code == 200, me_resp.text
     me_data = me_resp.json()
@@ -182,10 +182,18 @@ def test_auth_flow_register_login(api_client: TestClient):
         f"Ожидался email '{email}', получено: {me_data.get('email')}"
     )
 
-    # 4. Старый cookie после ротации должен быть недействителен
+    # 4. Повторный вход ротирует токен — старый cookie становится недействителен
+    relogin_resp = api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert relogin_resp.status_code == 200, relogin_resp.text
+    rotated_cookie = relogin_resp.cookies.get(COOKIE_NAME)
+    assert rotated_cookie and rotated_cookie != first_cookie
+
     old_cookie_resp = api_client.get(
         "/api/v1/me",
-        headers={"Cookie": f"{COOKIE_NAME}={register_cookie}"},
+        headers={"Cookie": f"{COOKIE_NAME}={first_cookie}"},
     )
     assert old_cookie_resp.status_code == 401, (
         "Старый сессионный token должен быть инвалидирован после повторного входа"

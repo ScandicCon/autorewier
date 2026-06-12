@@ -39,6 +39,16 @@ skip_if_no_pdf_module = pytest.mark.skipif(
 )
 
 
+def _extract_pdf_text(pdf_bytes: bytes) -> str:
+    """Извлекает текстовый слой из PDF (ReportLab кодирует текст в потоки,
+    поэтому искать сырые UTF-8 байты нельзя — нужен полноценный парсер)."""
+    import io
+    import pdfplumber
+
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as doc:
+        return "\n".join((page.extract_text() or "") for page in doc.pages)
+
+
 def _get_generate_fn():
     """Возвращает функцию generate_inspection_pdf или пропускает тест."""
     if pdf_report_module is None:
@@ -130,9 +140,9 @@ def test_pdf_contains_verdict():
 
     assert isinstance(result, bytes)
     # Вердикт-метка должна присутствовать в PDF (как текст или закодированная строка)
-    verdict_label = report.verdict_label.encode("utf-8")
-    assert verdict_label in result or report.verdict.value.encode("utf-8") in result, (
-        f"Вердикт '{report.verdict_label}' не найден в PDF"
+    text = _extract_pdf_text(result)
+    assert report.verdict_label in text or report.verdict.value in text, (
+        f"Вердикт '{report.verdict_label}' не найден в PDF. Извлечено: {text[:200]!r}"
     )
 
 
@@ -163,7 +173,8 @@ def test_pdf_car_label_present_in_output():
 
     assert isinstance(result, bytes)
     # Проверяем наличие хотя бы части метки (Skoda или Octavia)
-    assert b"Skoda" in result or b"Octavia" in result or car_label.encode("utf-8") in result
+    text = _extract_pdf_text(result)
+    assert "Skoda" in text or "Octavia" in text or car_label in text
 
 
 @skip_if_no_pdf_module
@@ -175,7 +186,7 @@ def test_pdf_with_risks_contains_risk_info():
 
     assert isinstance(result, bytes)
     # Название риска или часть его описания должны быть в документе
-    risk_title = report.risks[0].title.encode("utf-8")
-    assert risk_title in result, (
+    text = _extract_pdf_text(result)
+    assert report.risks[0].title in text, (
         f"Название риска '{report.risks[0].title}' не найдено в PDF"
     )
