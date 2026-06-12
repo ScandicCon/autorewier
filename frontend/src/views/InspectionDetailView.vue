@@ -32,7 +32,7 @@ async function savePostNotes() {
   postNotesSaving.value = true
   postNotesSaved.value = false
   try {
-    const API_BASE = import.meta.env.VITE_API_BASE || ''
+    const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
     await fetch(`${API_BASE}/api/v1/inspections/${route.params.id}/post`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

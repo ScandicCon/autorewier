@@ -103,6 +103,66 @@ async def check_listing_status(url: str) -> dict:
     return result
 
 
+async def fetch_current_listing_state(url: str) -> dict:
+    """Текущее состояние объявления (цена/статус). Тонкая обёртка над парсером,
+    выделена отдельно, чтобы её было удобно мокать в тестах."""
+    return await check_listing_status(url)
+
+
+async def check_listing(listing) -> list[ListingChangeEvent]:
+    """Чистая проверка одного объявления: сравнивает текущее состояние с сохранённым
+    и возвращает список ListingChangeEvent без записи в БД.
+
+    Используется в юнит-тестах и переиспользуема как ядро логики мониторинга.
+    Принимает любой объект с полями id, url, last_price, last_status.
+    """
+    current = await fetch_current_listing_state(listing.url)
+    events: list[ListingChangeEvent] = []
+
+    new_price = current.get("price")
+    new_status_raw = current.get("status", "active")
+    new_status = (
+        new_status_raw.value if isinstance(new_status_raw, ListingStatus) else str(new_status_raw)
+    )
+
+    last_price = listing.last_price
+    last_status_raw = listing.last_status
+    last_status = (
+        last_status_raw.value if isinstance(last_status_raw, ListingStatus) else str(last_status_raw)
+    )
+
+    # Изменение цены
+    if new_price and last_price and new_price != last_price:
+        change_type = ChangeType.PRICE_DROP if new_price < last_price else ChangeType.PRICE_RISE
+        events.append(
+            ListingChangeEvent(
+                monitored_listing_id=listing.id,
+                change_type=change_type,
+                old_value=last_price,
+                new_value=new_price,
+            )
+        )
+
+    # Изменение статуса (продано/снято)
+    if new_status != last_status and new_status in (
+        ListingStatus.SOLD.value,
+        ListingStatus.REMOVED.value,
+    ):
+        change_type = (
+            ChangeType.SOLD if new_status == ListingStatus.SOLD.value else ChangeType.REMOVED
+        )
+        events.append(
+            ListingChangeEvent(
+                monitored_listing_id=listing.id,
+                change_type=change_type,
+                old_value=last_status,
+                new_value=new_status,
+            )
+        )
+
+    return events
+
+
 async def run_monitoring_cycle() -> None:
     """Обходит все активные MonitoredListing, сравнивает с прошлым состоянием.
 

@@ -225,6 +225,11 @@ async def issue_verification_code(
                 "Verification email delivery failed (provider=%s): %s",
                 delivery.provider, delivery.message,
             )
+            if settings.is_production:
+                raise ValueError(
+                    "Не удалось отправить письмо подтверждения: в production "
+                    f"требуется настроенный SMTP/провайдер почты. {delivery.message}"
+                )
             message = f"Не удалось отправить письмо: {delivery.message}"
 
     await session.commit()

@@ -51,6 +51,7 @@ async def register(
     return {
         "id": user.id,
         "email": user.email,
+        "email_verified": bool(user.email_verified),
         "message": "Регистрация прошла успешно. Войдите в систему.",
     }
 
@@ -79,6 +80,7 @@ async def login(
         "plan": user.subscription_plan.value,
         "is_pro": is_pro_active(user),
         "email_verified": bool(user.email_verified),
+        "token": create_jwt(user.id, user.email),
     }
 
 

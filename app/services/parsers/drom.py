@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from app.schemas import VehicleInput
 from app.services.listing_text import extract_listing_repairs
+from app.services.parsers import base as _base
 from app.services.parsers.base import (
     ParsedListing,
     _fetch_html,
@@ -232,7 +233,12 @@ async def parse_drom_url(url: str) -> ParsedListing:
             action_required="provide_drom_url",
         )
 
-    html, http_status, error = await _fetch_html(url)
+    fetch_result = await _base._fetch_html(url)
+    if isinstance(fetch_result, tuple):
+        html, http_status, error = fetch_result
+    else:
+        # Legacy-совместимость для тестов/моков, возвращающих только HTML-строку
+        html, http_status, error = fetch_result, 200 if fetch_result else None, None
 
     if error:
         return ParsedListing(

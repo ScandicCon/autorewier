@@ -166,16 +166,22 @@ async def create_inspection(
         if data.require_avito_parse and not is_avito_url(url):
             raise ValueError("Укажите ссылку на объявление Avito (avito.ru) или введите данные вручную")
 
-        # Only fetch listing when explicitly requested — avoids Railway timeout.
-        if data.require_avito_parse:
-            if is_avito_url(url):
+        # Парсинг объявления:
+        #  - Avito тяжёлый (Playwright/скрейпинг) — парсим только по явному
+        #    запросу (require_avito_parse), чтобы не упираться в таймаут.
+        #  - Остальные площадки (Drom/Auto.ru/Youla/прочие) — лёгкий HTTP-парс,
+        #    выполняем всегда, когда дана ссылка.
+        parsed = None
+        if is_avito_url(url):
+            if data.require_avito_parse:
                 parsed = await parse_avito_url(url)
-            else:
-                parsed = await parse_listing_url(url)
+        else:
+            parsed = await parse_listing_url(url)
 
+        if parsed is not None:
             platform = parsed.platform
             if not parsed.parse_ok:
-                raise ValueError(parsed.parse_error or "Не удалось загрузить объявление с Avito")
+                raise ValueError(parsed.parse_error or "Не удалось загрузить объявление")
 
             if not isinstance(parsed.vehicle, VehicleInput):
                 raise ValueError("Некорректные данные автомобиля в объявлении")
