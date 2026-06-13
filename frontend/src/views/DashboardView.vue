@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchInspectionsHistory, fetchCurrentUser, logoutUser } from '../api/inspectionApi'
+import { fetchInspectionsHistory, fetchCurrentUser, logoutUser, subscribePro } from '../api/inspectionApi'
 
 const router = useRouter()
 const loading = ref(true)
@@ -9,6 +9,8 @@ const history = ref([])
 const currentUser = ref(null)
 const error = ref('')
 const activeTab = ref('checks')
+const goingPro = ref(false)
+const payError = ref('')
 
 onMounted(async () => {
   try {
@@ -26,6 +28,25 @@ onMounted(async () => {
 async function handleLogout() {
   try { await logoutUser() } catch {}
   router.push('/login')
+}
+
+async function goPro() {
+  goingPro.value = true
+  payError.value = ''
+  try {
+    const { confirmation_url } = await subscribePro()
+    if (confirmation_url) {
+      window.location.href = confirmation_url
+    } else {
+      payError.value = 'Не удалось получить ссылку на оплату. Попробуйте позже.'
+      goingPro.value = false
+    }
+  } catch (e) {
+    payError.value = e.status === 503
+      ? 'Оплата временно недоступна. Попробуйте позже.'
+      : (e.message || 'Не удалось начать оплату. Попробуйте позже.')
+    goingPro.value = false
+  }
 }
 
 // verdict: "worth_looking" | "caution" | "skip"
@@ -242,9 +263,10 @@ function fmt(n) {
                 Приоритетная поддержка
               </div>
             </div>
-            <button class="btn btn-primary" style="font-size:15px;padding:12px 28px">
-              Перейти на Pro — 990 ₽/мес
+            <button class="btn btn-primary" style="font-size:15px;padding:12px 28px" :disabled="goingPro" @click="goPro">
+              {{ goingPro ? 'Переходим к оплате…' : 'Перейти на Pro — 990 ₽/мес' }}
             </button>
+            <p v-if="payError" style="margin-top:10px;color:#ff6b6b;font-size:13px">{{ payError }}</p>
           </div>
           <img src="/img/checklist-smiles.png" alt="" style="width:160px;opacity:.7;border-radius:12px;margin-top:8px" onerror="this.style.display='none'">
         </div>

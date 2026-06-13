@@ -131,3 +131,7 @@ export async function resetPassword(token, newPassword) {
     body: JSON.stringify({ token, new_password: newPassword })
   });
 }
+
+export async function subscribePro() {
+  return request("/payments/subscribe", { method: "POST" });
+}
