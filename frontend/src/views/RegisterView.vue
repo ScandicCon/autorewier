@@ -96,6 +96,11 @@ async function submit() {
             <span v-if="loading" class="btn-spinner"></span>
             {{ loading ? 'Создаём аккаунт...' : 'Создать аккаунт' }}
           </button>
+          <p style="margin-top:12px;font-size:12px;color:var(--muted,#94a3b8);text-align:center">
+            Регистрируясь, вы принимаете
+            <router-link to="/oferta">оферту</router-link> и
+            <router-link to="/privacy">политику конфиденциальности</router-link>.
+          </p>
         </form>
 
         <div class="divider">или зарегистрируйтесь через</div>

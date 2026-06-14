@@ -291,6 +291,12 @@ onMounted(async () => {
         <div>
           <h4>Поддержка</h4>
           <a href="#faq">FAQ</a>
+          <router-link to="/contacts">Контакты</router-link>
+        </div>
+        <div>
+          <h4>Документы</h4>
+          <router-link to="/oferta">Публичная оферта</router-link>
+          <router-link to="/privacy">Политика конфиденциальности</router-link>
         </div>
       </div>
       <div class="copy">© 2026 ПОДКАПОТ · Проверяй авто до встречи с продавцом.</div>
