@@ -26,6 +26,7 @@ def _reset_month_counter(user: User) -> None:
     if user.month_reset_key != key:
         user.month_reset_key = key
         user.inspections_this_month = 0
+        user.vin_reports_this_month = 0
 
 
 def can_create_inspection(user: User) -> tuple[bool, str]:
@@ -47,14 +48,73 @@ def increment_inspection_usage(user: User) -> None:
         user.inspections_this_month += 1
 
 
-async def create_yookassa_payment(session: AsyncSession, user: User) -> dict:
+# Пакеты докупки VIN-отчётов: количество -> цена в рублях.
+# Цена за отчёт всегда выше себестоимости Autocode (~60 ₽) → каждый пакет в плюс.
+REPORT_PACKS: dict[int, int] = {5: 490, 10: 890, 20: 1590}
+
+
+def can_use_vin_report(user: User) -> tuple[bool, str]:
+    """Можно ли пользователю сейчас получить VIN-отчёт.
+
+    Квота применяется ТОЛЬКО когда Autocode реально подключён (есть ключи) —
+    в демо-режиме отчёт ничего не стоит, поэтому ограничений нет.
+    Порядок: включённая квота Pro -> купленные кредиты пакетов.
+    """
+    if not settings.autocode_enabled:
+        return True, ""
+    _reset_month_counter(user)
+    if is_pro_active(user) and user.vin_reports_this_month < settings.pro_vin_reports_included:
+        return True, ""
+    if user.report_credits > 0:
+        return True, ""
+    if is_pro_active(user):
+        return (
+            False,
+            "Месячная квота VIN-отчётов исчерпана. Докупите пакет отчётов, чтобы продолжить.",
+        )
+    return (
+        False,
+        "VIN-отчёты доступны на подписке Pro. Оформите Pro или купите пакет отчётов.",
+    )
+
+
+def consume_vin_report(user: User) -> None:
+    """Списывает один VIN-отчёт: сначала из квоты Pro, затем из купленных кредитов.
+
+    В демо-режиме (Autocode не подключён) ничего не списывает.
+    """
+    if not settings.autocode_enabled:
+        return
+    _reset_month_counter(user)
+    if is_pro_active(user) and user.vin_reports_this_month < settings.pro_vin_reports_included:
+        user.vin_reports_this_month += 1
+    elif user.report_credits > 0:
+        user.report_credits -= 1
+
+
+def add_report_credits(user: User, count: int) -> None:
+    user.report_credits = (user.report_credits or 0) + int(count)
+
+
+async def _create_yookassa_payment(
+    session: AsyncSession,
+    user: User,
+    *,
+    amount_rub: int,
+    description: str,
+    product: str,
+    report_credits: int = 0,
+    plan: SubscriptionPlan = SubscriptionPlan.PRO,
+) -> dict:
     if not settings.yookassa_enabled:
         raise RuntimeError("ЮKassa не настроена")
 
     payment = Payment(
         user_id=user.id,
-        amount_rub=settings.subscription_pro_price_rub,
-        plan=SubscriptionPlan.PRO,
+        amount_rub=amount_rub,
+        plan=plan,
+        product=product,
+        report_credits=report_credits,
         status=PaymentStatus.PENDING,
     )
     session.add(payment)
@@ -66,13 +126,13 @@ async def create_yookassa_payment(session: AsyncSession, user: User) -> dict:
     ).decode()
 
     body = {
-        "amount": {"value": f"{settings.subscription_pro_price_rub:.2f}", "currency": "RUB"},
+        "amount": {"value": f"{amount_rub:.2f}", "currency": "RUB"},
         "confirmation": {
             "type": "redirect",
             "return_url": settings.yookassa_return_url,
         },
         "capture": True,
-        "description": "AutoRewier Pro — 30 дней",
+        "description": description,
         "metadata": {"user_id": str(user.id), "payment_id": str(payment.id)},
     }
 
@@ -96,6 +156,32 @@ async def create_yookassa_payment(session: AsyncSession, user: User) -> dict:
         "payment_id": payment.id,
         "confirmation_url": data["confirmation"]["confirmation_url"],
     }
+
+
+async def create_yookassa_payment(session: AsyncSession, user: User) -> dict:
+    return await _create_yookassa_payment(
+        session,
+        user,
+        amount_rub=settings.subscription_pro_price_rub,
+        description="AutoRewier Pro — 30 дней",
+        product="subscription",
+        plan=SubscriptionPlan.PRO,
+    )
+
+
+async def create_report_pack_payment(session: AsyncSession, user: User, pack_size: int) -> dict:
+    price = REPORT_PACKS.get(pack_size)
+    if price is None:
+        raise ValueError("Неизвестный пакет отчётов")
+    return await _create_yookassa_payment(
+        session,
+        user,
+        amount_rub=price,
+        description=f"AutoRewier — пакет {pack_size} VIN-отчётов",
+        product="report_pack",
+        report_credits=pack_size,
+        plan=SubscriptionPlan.FREE,
+    )
 
 
 async def activate_pro_subscription(session: AsyncSession, user: User) -> None:
@@ -170,9 +256,12 @@ async def handle_yookassa_webhook(session: AsyncSession, payload: dict) -> bool:
     payment.status = PaymentStatus.SUCCEEDED
     user = await session.get(User, payment.user_id)
     if user:
-        now = datetime.now()
-        base = user.subscription_until if user.subscription_until and user.subscription_until > now else now
-        user.subscription_plan = SubscriptionPlan.PRO
-        user.subscription_until = base + timedelta(days=30)
+        if payment.product == "report_pack":
+            add_report_credits(user, payment.report_credits)
+        else:
+            now = datetime.now()
+            base = user.subscription_until if user.subscription_until and user.subscription_until > now else now
+            user.subscription_plan = SubscriptionPlan.PRO
+            user.subscription_until = base + timedelta(days=30)
     await session.commit()
     return True

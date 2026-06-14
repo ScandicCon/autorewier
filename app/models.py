@@ -71,6 +71,8 @@ class User(Base):
     subscription_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     inspections_this_month: Mapped[int] = mapped_column(Integer, default=0)
     month_reset_key: Mapped[str | None] = mapped_column(String(7))
+    vin_reports_this_month: Mapped[int] = mapped_column(Integer, default=0)
+    report_credits: Mapped[int] = mapped_column(Integer, default=0)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -89,6 +91,8 @@ class Payment(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     amount_rub: Mapped[int] = mapped_column(Integer)
     plan: Mapped[SubscriptionPlan] = mapped_column(Enum(SubscriptionPlan, values_callable=_VAL))
+    product: Mapped[str] = mapped_column(String(32), default="subscription")
+    report_credits: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[PaymentStatus] = mapped_column(
         Enum(PaymentStatus, values_callable=_VAL), default=PaymentStatus.PENDING
     )

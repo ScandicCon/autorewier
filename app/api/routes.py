@@ -233,6 +233,8 @@ async def vin_check_api(
     )
     try:
         check = await run_vin_check(session, user.id, body.vin, body.inspection_id)
+    except ValueError as e:
+        raise HTTPException(402, str(e)) from e
     except Exception as e:
         raise HTTPException(502, f"Autocode: {e}") from e
     return VinCheckResponse(

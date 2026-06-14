@@ -135,3 +135,11 @@ export async function resetPassword(token, newPassword) {
 export async function subscribePro() {
   return request("/payments/subscribe", { method: "POST" });
 }
+
+export async function getReportPacks() {
+  return request("/payments/report-packs");
+}
+
+export async function buyReportPack(packSize) {
+  return request("/payments/buy-report-pack", { method: "POST", body: JSON.stringify({ pack_size: packSize }) });
+}

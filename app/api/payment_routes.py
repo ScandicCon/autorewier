@@ -1,6 +1,7 @@
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -10,7 +11,14 @@ from app.models import User
 from app.security.rate_limit import enforce_rate_limit
 from app.security.yookassa import verify_yookassa_source_ip
 from app.services.analytics import track_event
-from app.services.subscription import create_yookassa_payment, handle_yookassa_webhook
+from app.services.subscription import (
+    REPORT_PACKS,
+    can_use_vin_report,
+    create_report_pack_payment,
+    create_yookassa_payment,
+    handle_yookassa_webhook,
+    is_pro_active,
+)
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -59,6 +67,55 @@ async def yookassa_webhook(request: Request, session: AsyncSession = Depends(get
     if processed:
         await track_event("payment_webhook_processed", props={"source_ip": source_ip})
     return {"ok": True}
+
+
+class BuyReportPackRequest(BaseModel):
+    pack_size: int
+
+
+@router.get("/report-packs")
+async def report_packs(
+    user: User = Depends(get_current_user),
+):
+    """Доступные пакеты VIN-отчётов и текущий остаток квоты пользователя."""
+    from app.config import settings
+
+    included = settings.pro_vin_reports_included if is_pro_active(user) else 0
+    used = user.vin_reports_this_month or 0
+    quota_left = max(0, included - used) if is_pro_active(user) else 0
+    return {
+        "packs": [{"pack_size": k, "price_rub": v} for k, v in sorted(REPORT_PACKS.items())],
+        "is_pro": is_pro_active(user),
+        "included_per_month": included,
+        "quota_left": quota_left,
+        "report_credits": user.report_credits or 0,
+    }
+
+
+@router.post("/buy-report-pack")
+async def buy_report_pack(
+    body: BuyReportPackRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
+    await enforce_rate_limit(
+        request,
+        scope="api_subscribe",
+        limit=settings.rate_limit_payment_limit,
+        window_seconds=settings.rate_limit_payment_window_seconds,
+        identity=str(user.id),
+    )
+    if not settings.yookassa_enabled:
+        raise HTTPException(503, "Оплата не настроена.")
+    try:
+        data = await create_report_pack_payment(session, user, body.pack_size)
+        await track_event("report_pack_create", user_id=user.id, props={"pack": body.pack_size})
+        return data
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        raise HTTPException(502, str(e)) from e
 
 
 @router.post("/dev/activate-pro")

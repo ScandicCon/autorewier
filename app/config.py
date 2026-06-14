@@ -67,6 +67,7 @@ class Settings(BaseSettings):
 
     subscription_pro_price_rub: int = 990
     free_inspections_per_month: int = 3
+    pro_vin_reports_included: int = 10  # включённых VIN-отчётов в Pro/мес (защита маржи)
     allow_dev_payment_bypass: bool = False
     allow_mock_services: bool = False
     enable_telegram_header_auth: bool = True

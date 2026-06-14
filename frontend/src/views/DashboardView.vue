@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchInspectionsHistory, fetchCurrentUser, logoutUser, subscribePro } from '../api/inspectionApi'
+import { fetchInspectionsHistory, fetchCurrentUser, logoutUser, subscribePro, getReportPacks, buyReportPack } from '../api/inspectionApi'
 
 const router = useRouter()
 const loading = ref(true)
@@ -11,12 +11,15 @@ const error = ref('')
 const activeTab = ref('checks')
 const goingPro = ref(false)
 const payError = ref('')
+const packsInfo = ref(null)
+const buyingPack = ref(0)
 
 onMounted(async () => {
   try {
     const [user, items] = await Promise.all([fetchCurrentUser(), fetchInspectionsHistory()])
     currentUser.value = user
     history.value = items
+    getReportPacks().then((p) => { packsInfo.value = p }).catch(() => {})
   } catch (e) {
     if (e.status === 401) router.push('/login')
     else error.value = e.message || 'Не удалось загрузить данные'
@@ -46,6 +49,23 @@ async function goPro() {
       ? 'Оплата временно недоступна. Попробуйте позже.'
       : (e.message || 'Не удалось начать оплату. Попробуйте позже.')
     goingPro.value = false
+  }
+}
+
+async function buyPack(size) {
+  buyingPack.value = size
+  payError.value = ''
+  try {
+    const { confirmation_url } = await buyReportPack(size)
+    if (confirmation_url) {
+      window.location.href = confirmation_url
+    } else {
+      payError.value = 'Не удалось получить ссылку на оплату.'
+      buyingPack.value = 0
+    }
+  } catch (e) {
+    payError.value = e.message || 'Не удалось купить пакет.'
+    buyingPack.value = 0
   }
 }
 
@@ -269,6 +289,24 @@ function fmt(n) {
             <p v-if="payError" style="margin-top:10px;color:#ff6b6b;font-size:13px">{{ payError }}</p>
           </div>
           <img src="/img/checklist-smiles.png" alt="" style="width:160px;opacity:.7;border-radius:12px;margin-top:8px" onerror="this.style.display='none'">
+        </div>
+      </div>
+
+      <!-- ПАКЕТЫ VIN-ОТЧЁТОВ -->
+      <div v-if="packsInfo && packsInfo.packs && packsInfo.packs.length" style="margin-top:24px;border-radius:16px;border:1.5px solid rgba(148,163,184,.18);padding:24px">
+        <div class="carline" style="margin-bottom:6px">// VIN-ОТЧЁТЫ</div>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:6px">
+          <template v-if="packsInfo.is_pro">Включено в Pro: {{ packsInfo.included_per_month }}/мес · осталось в этом месяце: {{ packsInfo.quota_left }}.</template>
+          <template v-else>VIN-отчёты доступны на Pro или по пакетам.</template>
+          Куплено сверх: {{ packsInfo.report_credits }}.
+        </p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Нужно больше отчётов — докупи пакет:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <button v-for="p in packsInfo.packs" :key="p.pack_size" class="btn btn-ghost"
+                  :disabled="buyingPack === p.pack_size" @click="buyPack(p.pack_size)"
+                  style="font-size:14px;padding:10px 18px">
+            {{ buyingPack === p.pack_size ? 'Оплата…' : `${p.pack_size} отчётов — ${p.price_rub} ₽` }}
+          </button>
         </div>
       </div>
     </template>

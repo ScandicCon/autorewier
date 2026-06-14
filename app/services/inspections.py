@@ -22,7 +22,12 @@ from app.services.image_analysis import analyze_photo_urls
 from app.services.listing_text import extract_listing_repairs, repairs_to_text
 from app.services.parts_prices import build_parts_pricing
 from app.services.parsers import is_avito_url, parse_avito_url, parse_listing_url
-from app.services.subscription import can_create_inspection, increment_inspection_usage
+from app.services.subscription import (
+    can_create_inspection,
+    can_use_vin_report,
+    consume_vin_report,
+    increment_inspection_usage,
+)
 
 
 async def get_or_create_user(session: AsyncSession, telegram_id: int) -> User:
@@ -240,14 +245,19 @@ async def create_inspection(
     vin_raw = None
     vin_uid = None
     if vehicle.vin:
-        try:
-            vin_data = await request_vin_report(vehicle.vin)
-            vin_summary = vin_data.get("summary")
-            vin_raw = vin_data.get("raw")
-            vin_uid = vin_data.get("report_uid")
-            report.vin_summary = vin_summary
-        except Exception:
-            report.vin_summary = "Проверка VIN временно недоступна"
+        allowed_vin, vin_msg = can_use_vin_report(user)
+        if not allowed_vin:
+            report.vin_summary = vin_msg
+        else:
+            try:
+                vin_data = await request_vin_report(vehicle.vin)
+                vin_summary = vin_data.get("summary")
+                vin_raw = vin_data.get("raw")
+                vin_uid = vin_data.get("report_uid")
+                report.vin_summary = vin_summary
+                consume_vin_report(user)
+            except Exception:
+                report.vin_summary = "Проверка VIN временно недоступна"
 
     parts_dump = [p.model_dump() for p in report.parts_pricing]
 
@@ -298,6 +308,11 @@ async def run_vin_check(
     vin: str,
     inspection_id: int | None = None,
 ) -> VinCheck:
+    user = await session.get(User, user_id)
+    if user is not None:
+        allowed_vin, vin_msg = can_use_vin_report(user)
+        if not allowed_vin:
+            raise ValueError(vin_msg)
     data = await request_vin_report(vin)
     check = VinCheck(
         user_id=user_id,
@@ -316,6 +331,8 @@ async def run_vin_check(
                 pr = dict(ins.pre_report)
                 pr["vin_summary"] = data.get("summary")
                 ins.pre_report = pr
+    if user is not None:
+        consume_vin_report(user)
     await session.commit()
     await session.refresh(check)
     return check
