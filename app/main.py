@@ -35,6 +35,23 @@ async def lifespan(app: FastAPI):
         pass
 
 
+# Sentry — мониторинг ошибок. Включается только при заданном SENTRY_DSN;
+# без него ничего не импортируется и не инициализируется (мягкая деградация).
+if settings.sentry_dsn.strip():
+    try:
+        import sentry_sdk
+
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn.strip(),
+            environment=settings.environment,
+            traces_sample_rate=settings.sentry_traces_sample_rate,
+            send_default_pii=False,
+            release=getattr(settings, "app_version", None) or None,
+        )
+    except Exception:
+        pass
+
+
 app = FastAPI(
     title="AutoRewier",
     description="Proверка автомобиля перед покупкой и перепродажей",
