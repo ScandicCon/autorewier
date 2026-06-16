@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { createInspection } from '../api/inspectionApi'
+import { createInspection, getToken } from '../api/inspectionApi'
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
@@ -57,7 +57,7 @@ async function fetchListing(url) {
     const res = await fetch(`${API_BASE}/api/v1/parse-listing`, {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
       body: JSON.stringify({ url })
     })
     if (!res.ok) throw new Error('parse_failed')

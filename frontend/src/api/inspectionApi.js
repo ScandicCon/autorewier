@@ -3,6 +3,14 @@
 const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 const API_ROOT = `${API_BASE}/api/v1`;
 
+// JWT-токен для авторизации по Authorization: Bearer.
+// Нужен, т.к. фронт (Vercel) и бэкенд (Railway) на разных доменах — сторонние
+// cookie блокируются мобильными браузерами. Токен обходит это ограничение.
+const TOKEN_KEY = "autorewier_token";
+export function setToken(t) { try { if (t) localStorage.setItem(TOKEN_KEY, t); } catch {} }
+export function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
+export function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch {} }
+
 export class ApiClientError extends Error {
   constructor(message, status, details) {
     super(message);
@@ -28,9 +36,11 @@ function toErrorMessage(response, details) {
 }
 
 async function request(path, options = {}) {
+  const token = getToken();
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   const response = await fetch(`${API_ROOT}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    headers: { "Content-Type": "application/json", ...authHeader, ...(options.headers || {}) },
     ...options
   });
   if (!response.ok) {
@@ -95,7 +105,9 @@ export async function confirmVerificationCode(payload) {
 }
 
 export async function loginUser(email, password) {
-  return request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+  const data = await request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+  if (data && data.token) setToken(data.token);
+  return data;
 }
 
 export async function registerUser(email, password) {
@@ -103,7 +115,11 @@ export async function registerUser(email, password) {
 }
 
 export async function logoutUser() {
-  return request("/auth/logout", { method: "POST" });
+  try {
+    return await request("/auth/logout", { method: "POST" });
+  } finally {
+    clearToken();
+  }
 }
 
 export async function checkAuth() {

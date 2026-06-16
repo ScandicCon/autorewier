@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchInspectionDetails } from '../api/inspectionApi'
+import { fetchInspectionDetails, getToken } from '../api/inspectionApi'
 
 const route = useRoute()
 const inspection = ref(null)
@@ -35,7 +35,7 @@ async function savePostNotes() {
     const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
     await fetch(`${API_BASE}/api/v1/inspections/${route.params.id}/post`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
       credentials: 'include',
       body: JSON.stringify({ post_notes: postNotes.value })
     })
