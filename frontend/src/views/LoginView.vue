@@ -1,4 +1,5 @@
 <script setup>
+import SocialLogin from '../components/SocialLogin.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { loginUser, requestVerificationCode } from '../api/inspectionApi'
@@ -81,24 +82,7 @@ async function submit() {
           </button>
         </form>
 
-        <div class="divider">или войдите через</div>
-
-        <div class="social-row social-row--2col">
-          <a class="social-btn social-btn--tg" href="#">
-            <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
-              <circle cx="24" cy="24" r="24" fill="#29B6F6"/>
-              <path fill="#fff" d="M34.1 14.2l-4.3 20.2c-.3 1.4-1.1 1.8-2.3 1.1l-6.4-4.7-3.1 3c-.3.3-.6.6-1.3.6l.5-6.5 11.8-10.7c.5-.5-.1-.7-.8-.3L11.4 26.9l-6.3-2c-1.4-.4-1.4-1.4.3-2l24.6-9.5c1.1-.4 2.1.3 1.8 1.9z"/>
-            </svg>
-            Telegram
-          </a>
-          <a class="social-btn social-btn--ya" href="#">
-            <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
-              <circle cx="24" cy="24" r="24" fill="#FC3F1D"/>
-              <path fill="#fff" d="M27.8 34h-4V20.1h-2.1c-2.4 0-3.7 1.2-3.7 3.1 0 2.1 1 3.1 2.8 4.3l1.6 1-4.6 7.4h-4.2l4.2-6.6c-2.4-1.7-3.7-3.4-3.7-6.3 0-3.8 2.7-6.3 7.5-6.3h6.2V34z"/>
-            </svg>
-            Яндекс
-          </a>
-        </div>
+        <SocialLogin />
 
         <div class="auth-foot">
           Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link>

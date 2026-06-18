@@ -159,3 +159,7 @@ export async function getReportPacks() {
 export async function buyReportPack(packSize) {
   return request("/payments/buy-report-pack", { method: "POST", body: JSON.stringify({ pack_size: packSize }) });
 }
+
+export async function getOAuthProviders() {
+  return request("/auth/oauth/providers");
+}

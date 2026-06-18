@@ -73,6 +73,8 @@ class User(Base):
     month_reset_key: Mapped[str | None] = mapped_column(String(7))
     vin_reports_this_month: Mapped[int] = mapped_column(Integer, default=0)
     report_credits: Mapped[int] = mapped_column(Integer, default=0)
+    oauth_provider: Mapped[str | None] = mapped_column(String(32))
+    oauth_id: Mapped[str | None] = mapped_column(String(128), index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

@@ -11,6 +11,7 @@ const routes = [
   { path: '/oferta', component: () => import('../views/OfertaView.vue'), meta: { public: true } },
   { path: '/privacy', component: () => import('../views/PrivacyView.vue'), meta: { public: true } },
   { path: '/contacts', component: () => import('../views/ContactsView.vue'), meta: { public: true } },
+  { path: '/oauth-callback', component: () => import('../views/OAuthCallbackView.vue'), meta: { public: true } },
   { path: '/app', component: () => import('../views/DashboardView.vue') },
   { path: '/app/new', component: () => import('../views/NewInspectionView.vue') },
   { path: '/app/inspection/:id', component: () => import('../views/InspectionDetailView.vue') },

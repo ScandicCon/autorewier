@@ -70,6 +70,15 @@ class Settings(BaseSettings):
     pro_vin_reports_included: int = 10  # включённых VIN-отчётов в Pro/мес (защита маржи)
     sentry_dsn: str = ""
     sentry_traces_sample_rate: float = 0.1
+    # OAuth (вход через соцсети). Провайдер активен только при заданных client_id/secret.
+    oauth_redirect_base: str = ""   # публичный URL бэкенда, напр. https://autorewier-production.up.railway.app
+    oauth_success_redirect: str = ""  # фронт-URL приёма токена; по умолчанию web_base_url + /oauth-callback
+    yandex_client_id: str = ""
+    yandex_client_secret: str = ""
+    vk_client_id: str = ""
+    vk_client_secret: str = ""
+    google_client_id: str = ""
+    google_client_secret: str = ""
     allow_dev_payment_bypass: bool = False
     allow_mock_services: bool = False
     enable_telegram_header_auth: bool = True

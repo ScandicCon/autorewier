@@ -1,4 +1,7 @@
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -7,6 +10,7 @@ from app.deps import get_current_user
 from app.models import User
 from app.schemas import LoginRequest, RegisterRequest
 from app.services.subscription import is_pro_active
+from app.services import oauth as oauth_service
 from app.security.rate_limit import enforce_rate_limit
 from app.services.analytics import track_event
 from app.services.auth import (
@@ -243,3 +247,92 @@ async def confirm_verification(
         email_masked=result["email_masked"],
         phone_masked=result["phone_masked"],
     )
+
+
+# ---------------------------------------------------------------------------
+# Вход через соцсети (OAuth) + Telegram Login
+# ---------------------------------------------------------------------------
+
+@router.get("/oauth/providers")
+async def oauth_providers():
+    """Список включённых провайдеров соц-входа (для фронта)."""
+    enabled = [p for p in oauth_service.REDIRECT_PROVIDERS if oauth_service.provider_enabled(p)]
+    return {"providers": enabled, "telegram": oauth_service.provider_enabled("telegram")}
+
+
+@router.get("/oauth/{provider}/start")
+async def oauth_start(provider: str, request: Request):
+    if not oauth_service.provider_enabled(provider) or provider not in oauth_service.REDIRECT_PROVIDERS:
+        raise HTTPException(404, "Провайдер недоступен или не настроен")
+    await enforce_rate_limit(request, scope="oauth_start", limit=20, window_seconds=300)
+    state = secrets.token_urlsafe(16)
+    return RedirectResponse(oauth_service.build_authorize_url(provider, state), status_code=307)
+
+
+@router.get("/oauth/{provider}/callback")
+async def oauth_callback(
+    provider: str,
+    request: Request,
+    code: str | None = None,
+    error: str | None = None,
+    session: AsyncSession = Depends(get_db),
+):
+    redirect_base = oauth_service.success_redirect()
+    if error or not code or not oauth_service.provider_enabled(provider):
+        return RedirectResponse(f"{redirect_base}?error=oauth_failed", status_code=307)
+    try:
+        profile = await oauth_service.exchange_code(provider, code)
+        user = await oauth_service.find_or_create_oauth_user(
+            session,
+            provider=profile["provider"],
+            sub=profile["sub"],
+            email=profile.get("email"),
+            name=profile.get("name"),
+        )
+    except Exception:
+        return RedirectResponse(f"{redirect_base}?error=oauth_failed", status_code=307)
+    await track_event("oauth_login", user_id=user.id, props={"provider": provider})
+    token = create_jwt(user.id, user.email)
+    return RedirectResponse(f"{redirect_base}?token={token}", status_code=307)
+
+
+@router.get("/telegram/callback")
+async def telegram_callback(request: Request, session: AsyncSession = Depends(get_db)):
+    """Приём данных Telegram Login Widget через data-auth-url (GET с параметрами)."""
+    redirect_base = oauth_service.success_redirect()
+    params = dict(request.query_params)
+    if not oauth_service.provider_enabled("telegram") or not oauth_service.verify_telegram_auth(params):
+        return RedirectResponse(f"{redirect_base}?error=telegram_failed", status_code=307)
+    tg_id = params.get("id")
+    if not tg_id:
+        return RedirectResponse(f"{redirect_base}?error=telegram_failed", status_code=307)
+    name = (str(params.get("first_name") or "") + " " + str(params.get("last_name") or "")).strip() or params.get("username")
+    user = await oauth_service.find_or_create_oauth_user(
+        session, provider="telegram", sub=str(tg_id), email=None, name=name,
+    )
+    await track_event("oauth_login", user_id=user.id, props={"provider": "telegram"})
+    token = create_jwt(user.id, user.email)
+    return RedirectResponse(f"{redirect_base}?token={token}", status_code=307)
+
+
+@router.post("/telegram")
+async def telegram_login(
+    body: dict,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    await enforce_rate_limit(request, scope="oauth_telegram", limit=20, window_seconds=300)
+    if not oauth_service.provider_enabled("telegram"):
+        raise HTTPException(404, "Telegram-вход не настроен")
+    if not oauth_service.verify_telegram_auth(dict(body)):
+        raise HTTPException(401, "Подпись Telegram недействительна")
+    tg_id = body.get("id")
+    if not tg_id:
+        raise HTTPException(400, "Некорректные данные Telegram")
+    name = (str(body.get("first_name") or "") + " " + str(body.get("last_name") or "")).strip() or body.get("username")
+    user = await oauth_service.find_or_create_oauth_user(
+        session, provider="telegram", sub=str(tg_id), email=None, name=name,
+    )
+    await track_event("oauth_login", user_id=user.id, props={"provider": "telegram"})
+    token = create_jwt(user.id, user.email)
+    return {"token": token, "id": user.id, "email": user.email}
