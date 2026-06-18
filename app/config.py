@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     pro_vin_reports_included: int = 10  # включённых VIN-отчётов в Pro/мес (защита маржи)
     sentry_dsn: str = ""
     sentry_traces_sample_rate: float = 0.1
+    posthog_api_key: str = ""
+    posthog_host: str = "https://eu.i.posthog.com"
     # OAuth (вход через соцсети). Провайдер активен только при заданных client_id/secret.
     oauth_redirect_base: str = ""   # публичный URL бэкенда, напр. https://autorewier-production.up.railway.app
     oauth_success_redirect: str = ""  # фронт-URL приёма токена; по умолчанию web_base_url + /oauth-callback
