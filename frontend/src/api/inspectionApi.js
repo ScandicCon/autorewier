@@ -1,5 +1,6 @@
 // In production (Vercel + Railway), set VITE_API_URL=https://your-railway-app.railway.app
 // For local dev and Docker, leave unset — relative /api/v1 works via the proxy / same host.
+// API client for AutoRewier frontend.
 const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 const API_ROOT = `${API_BASE}/api/v1`;
 
@@ -42,6 +43,26 @@ async function request(path, options = {}) {
     credentials: "include",
     headers: { "Content-Type": "application/json", ...authHeader, ...(options.headers || {}) },
     ...options
+  });
+  if (!response.ok) {
+    const details = await parseErrorDetails(response);
+    throw new ApiClientError(toErrorMessage(response, details), response.status, details);
+  }
+  return response.json();
+}
+
+// Загрузка фото на нейросетевой анализ повреждений (multipart/form-data).
+export async function analyzePhotos(files) {
+  const token = getToken();
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+  const form = new FormData();
+  for (const f of files) form.append("files", f);
+  // Content-Type НЕ задаём: браузер сам выставит multipart с boundary.
+  const response = await fetch(`${API_ROOT}/photos/analyze`, {
+    method: "POST",
+    credentials: "include",
+    headers: { ...authHeader },
+    body: form,
   });
   if (!response.ok) {
     const details = await parseErrorDetails(response);

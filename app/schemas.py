@@ -621,6 +621,11 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(min_length=6)
 
 
+class PasswordChangeRequest(BaseModel):
+    old_password: str
+    new_password: str = Field(min_length=6)
+
+
 # Monitored listings schemas
 class MonitoredListingCreate(BaseModel):
     url: str

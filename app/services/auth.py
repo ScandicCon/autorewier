@@ -350,3 +350,27 @@ async def reset_password(
     await session.commit()
     await session.refresh(user)
     return {"ok": True, "message": "Пароль успешно изменён."}
+
+
+async def change_password(
+    session: AsyncSession,
+    user: User,
+    old_password: str,
+    new_password: str,
+) -> dict:
+    if not user.password_hash:
+        raise ValueError("Для аккаунта не задан пароль (вход через соцсеть).")
+    if not verify_password(old_password, user.password_hash):
+        raise ValueError("Текущий пароль указан неверно.")
+    if len(new_password) < 6:
+        raise ValueError("Пароль должен быть не короче 6 символов")
+    if verify_password(new_password, user.password_hash):
+        raise ValueError("Новый пароль совпадает с текущим.")
+
+    user.password_hash = hash_password(new_password)
+    user.password_reset_token = None
+    user.password_reset_expires_at = None
+    issue_session(user)
+    await session.commit()
+    await session.refresh(user)
+    return {"ok": True, "message": "Пароль успешно изменён."}

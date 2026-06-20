@@ -2,6 +2,7 @@
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { createInspection, getToken } from '../api/inspectionApi'
+import PhotoAnalysisPanel from '../components/PhotoAnalysisPanel.vue'
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
@@ -260,6 +261,8 @@ async function submit() {
             </label>
           </div>
         </div>
+
+        <PhotoAnalysisPanel />
 
         <div style="display:flex;gap:10px;margin-top:8px">
           <button class="btn btn-ghost" style="flex:1" @click="step = 1" :disabled="loading">← Назад</button>

@@ -7,6 +7,10 @@ from typing import Any
 import httpx
 
 from app.config import settings
+from app.services.cache import cache_get_json, cache_set_json
+
+# История по VIN меняется медленно — кэшируем готовый отчёт на 7 дней.
+VIN_CACHE_TTL_SECONDS = 7 * 24 * 3600
 
 
 def _make_auth_token() -> str:
@@ -36,6 +40,12 @@ async def request_vin_report(vin: str) -> dict[str, Any]:
         if settings.can_use_mock_services:
             return _mock_vin_report(vin)
         raise RuntimeError("Autocode is not configured")
+
+    # Кэш: один и тот же VIN не оплачиваем у Autocode повторно в течение TTL.
+    cache_key = f"vin:report:{vin.upper().strip()}"
+    cached = await cache_get_json(cache_key)
+    if cached is not None:
+        return cached
 
     uid = settings.autocode_report_type_uid
     if "@" not in uid:
@@ -76,12 +86,16 @@ async def request_vin_report(vin: str) -> dict[str, Any]:
             )
             content = report.get("content") or report.get("data", {}).get("content")
             if content or state in ("ok", "success", None):
-                return {
+                result = {
                     "report_uid": report_uid,
                     "vin": vin.upper(),
                     "raw": report,
                     "summary": _extract_summary(report),
                 }
+                # Кэшируем только готовый отчёт (с контентом), демо/пустое не кэшируем.
+                if content:
+                    await cache_set_json(cache_key, result, VIN_CACHE_TTL_SECONDS)
+                return result
 
     raise TimeoutError("Отчёт Autocode не готов за отведённое время")
 
@@ -122,3 +136,4 @@ def _mock_vin_report(vin: str) -> dict[str, Any]:
             "Подключите Autocode B2B API для истории, ДТП, залогов и ограничений."
         ),
     }
+# end of autocode service

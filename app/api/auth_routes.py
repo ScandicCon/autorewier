@@ -16,6 +16,7 @@ from app.services.analytics import track_event
 from app.services.auth import (
     COOKIE_NAME,
     authenticate_user,
+    change_password,
     confirm_verification_code,
     create_jwt,
     issue_password_reset,
@@ -26,6 +27,7 @@ from app.services.auth import (
 )
 from app.schemas import (
     ForgotPasswordRequest,
+    PasswordChangeRequest,
     ResetPasswordRequest,
     VerificationConfirmRequest,
     VerificationRequest,
@@ -136,6 +138,28 @@ async def reset_password_api(
 ):
     try:
         result = await reset_password(session, body.token, body.new_password)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    return result
+
+
+@router.post("/password-change")
+async def password_change(
+    body: PasswordChangeRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
+    await enforce_rate_limit(
+        request,
+        scope="auth_password_change",
+        limit=5,
+        window_seconds=300,
+    )
+    try:
+        result = await change_password(
+            session, user, body.old_password, body.new_password
+        )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     return result
