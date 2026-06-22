@@ -181,7 +181,10 @@ export async function getReportPacks() {
 }
 
 export async function buyReportPack(packSize) {
-  return request("/payments/buy-report-pack", { method: "POST", body: JSON.stringify({ pack_size: packSize }) });
+  // Покупка пакета VIN-отчётов через Robokassa. Приводим к {confirmation_url}
+  // для существующего обработчика buyPack().
+  const data = await request("/payments/robokassa/buy-pack", { method: "POST", body: JSON.stringify({ pack_size: packSize }) });
+  return { confirmation_url: data.payment_url, ...data };
 }
 
 export async function getOAuthProviders() {
