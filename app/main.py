@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.admin_routes import router as admin_router, support_router
 from app.api.auth_routes import router as auth_router
 from app.api.payment_routes import router as payment_router
+from app.api.grz_routes import router as grz_router
 from app.api.photo_routes import router as photo_router
 from app.api.robokassa_routes import router as robokassa_router
 from app.api.routes import router as api_router
@@ -91,6 +92,7 @@ if FRONTEND_DIST.exists():
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(photo_router, prefix="/api/v1")
+app.include_router(grz_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(payment_router, prefix="/api/v1")
 app.include_router(robokassa_router, prefix="/api/v1")

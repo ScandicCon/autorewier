@@ -187,6 +187,10 @@ export async function buyReportPack(packSize) {
   return { confirmation_url: data.payment_url, ...data };
 }
 
+export async function checkByPlate(plate) {
+  return request("/grz/check", { method: "POST", body: JSON.stringify({ plate }) });
+}
+
 export async function getOAuthProviders() {
   return request("/auth/oauth/providers");
 }

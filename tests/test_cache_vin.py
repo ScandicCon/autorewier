@@ -33,7 +33,7 @@ def test_vin_report_returns_cached_without_external_call(monkeypatch):
     }
 
     async def fake_get(key):
-        assert key == "vin:report:XW8ZZZ61ZCG000000"
+        assert key == "autocode:VIN:XW8ZZZ61ZCG000000"
         return cached_report
 
     async def fail_set(*args, **kwargs):  # не должен вызываться при кэш-хите

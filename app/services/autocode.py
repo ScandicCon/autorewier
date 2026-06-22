@@ -35,14 +35,15 @@ def _headers() -> dict[str, str]:
     }
 
 
-async def request_vin_report(vin: str) -> dict[str, Any]:
+async def request_vin_report(vin: str, query_type: str = "VIN") -> dict[str, Any]:
+    """Отчёт Autocode по VIN (query_type="VIN") или гос-номеру ("GRZ")."""
     if not settings.autocode_enabled:
         if settings.can_use_mock_services:
             return _mock_vin_report(vin)
         raise RuntimeError("Autocode is not configured")
 
-    # Кэш: один и тот же VIN не оплачиваем у Autocode повторно в течение TTL.
-    cache_key = f"vin:report:{vin.upper().strip()}"
+    # Кэш: один и тот же запрос не оплачиваем у Autocode повторно в течение TTL.
+    cache_key = f"autocode:{query_type}:{vin.upper().strip()}"
     cached = await cache_get_json(cache_key)
     if cached is not None:
         return cached
@@ -56,7 +57,7 @@ async def request_vin_report(vin: str) -> dict[str, Any]:
         make_resp = await client.post(
             f"{base}/user/reports/{uid}/_make",
             headers=_headers(),
-            json={"queryType": "VIN", "query": vin.upper()},
+            json={"queryType": query_type, "query": vin.upper()},
         )
         make_resp.raise_for_status()
         make_data = make_resp.json()
