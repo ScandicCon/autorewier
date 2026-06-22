@@ -10,6 +10,7 @@ from app.api.admin_routes import router as admin_router, support_router
 from app.api.auth_routes import router as auth_router
 from app.api.payment_routes import router as payment_router
 from app.api.photo_routes import router as photo_router
+from app.api.robokassa_routes import router as robokassa_router
 from app.api.routes import router as api_router
 from app.config import BASE_DIR, settings
 from app.database import init_db
@@ -92,6 +93,7 @@ app.include_router(api_router, prefix="/api/v1")
 app.include_router(photo_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(payment_router, prefix="/api/v1")
+app.include_router(robokassa_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(support_router, prefix="/api/v1")
 if settings.enable_server_rendered_web:
