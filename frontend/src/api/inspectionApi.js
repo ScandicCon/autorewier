@@ -170,7 +170,10 @@ export async function resetPassword(token, newPassword) {
 }
 
 export async function subscribePro() {
-  return request("/payments/subscribe", { method: "POST" });
+  // Оплата Pro через Robokassa. Ответ приводим к {confirmation_url},
+  // чтобы существующий обработчик goPro() работал без изменений.
+  const data = await request("/payments/robokassa/subscribe", { method: "POST" });
+  return { confirmation_url: data.payment_url, ...data };
 }
 
 export async function getReportPacks() {
