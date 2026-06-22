@@ -34,8 +34,27 @@ jobs:
           pip install pytest pytest-timeout
 
       - name: Run tests
-        # Таймаут на тест: сетевой/зависший тест падает, а не блокирует пайплайн.
-        run: pytest -q --timeout=120 --timeout-method=thread -m "not integration"
+        # Каждый тест-файл — в отдельном процессе. Это исключает кумулятивное
+        # накопление ресурсов за один прогон (портальные потоки TestClient и т.п.),
+        # из-за которого полный сьют одним процессом подвисал. См. docs/ERRORS_LOG.md (T-01).
+        # Таймаут на тест: зависший/сетевой тест падает, а не блокирует пайплайн.
+        run: |
+          fail=0
+          for f in tests/test_*.py; do
+            echo "::group::$f"
+            # Жёсткий backstop: если pytest-таймаут не прервёт зависший тест,
+            # shell-таймаут гарантированно убьёт процесс файла.
+            timeout -s KILL 300 pytest "$f" -q --timeout=120 --timeout-method=thread -m "not integration"
+            rc=$?
+            echo "::endgroup::"
+            # rc=5 — в файле нет неинтеграционных тестов (всё помечено integration), это норма.
+            if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then
+              echo "FAILED: $f (exit $rc)"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "All test files passed."
 
   frontend-build:
     name: Frontend (build)
