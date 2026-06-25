@@ -21,7 +21,7 @@ async function run() {
   } catch (e) {
     error.value = e?.status === 402
       ? 'Закончились VIN-отчёты. Оформите Pro или докупите пакет.'
-      : (e?.message || 'Не удалось пробить номер. Проверьте формат (пример: А123ВС777).')
+      : (e?.message || 'Не удалось проверить номер. Проверьте формат (пример: А123ВС777).')
   } finally {
     loading.value = false
   }
@@ -32,10 +32,10 @@ async function run() {
   <div class="composer-section">
     <div class="composer-label">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h4M6 14h12"/></svg>
-      ПРОБИВКА ПО ГОС-НОМЕРУ
+      ПРОВЕРКА ПО ГОС-НОМЕРУ
     </div>
 
-    <p class="pc-hint">Введите госномер — по нему определится VIN, история, ограничения и залоги.</p>
+    <p class="pc-hint">Введите госномер — по нему определится VIN и история авто для анализа рисков.</p>
 
     <div class="pc-row">
       <input
@@ -48,7 +48,7 @@ async function run() {
       >
       <button class="btn btn-primary" @click="run" :disabled="loading">
         <span v-if="loading" class="btn-spinner"></span>
-        {{ loading ? 'Пробиваем…' : 'Пробить' }}
+        {{ loading ? 'Проверяем…' : 'Проверить' }}
       </button>
     </div>
 
