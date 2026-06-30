@@ -1,16 +1,18 @@
 """Поиск б/у детали по фотографии.
 
 Пользователь загружает фото детали (фара, бампер, зеркало, диск, фонарь и т.д.).
-Vision-LLM определяет, что это за деталь и на какую технику она похожа, строит
-поисковый запрос и ищет похожие б/у объявления на Авито (со ссылками).
+Vision-LLM определяет: ЧТО это за деталь, ОТ КАКОГО автомобиля она (лучшая оценка
+по форме + чтение OEM-номера/логотипов, если видны), и собирает максимально точный
+поисковый запрос для б/у объявлений на Авито.
 
 Архитектура осознанно собрана из готовых кусков проекта:
 - vision через тот же OpenRouter-клиент, что и `image_analysis.py`;
 - поиск объявлений через уже существующий `parts_prices.search_avito_parts`.
 
 ВАЖНО (продуктовое ограничение, сообщается пользователю явно):
-это поиск ПОХОЖИХ деталей по фото, а НЕ гарантия совместимости. Точную
-совместимость и OEM-номер по одной фотографии определить нельзя.
+точную марку/модель по фото одной отдельной детали часто определить нельзя —
+ИИ даёт ЛУЧШУЮ ДОГАДКУ (с честной оценкой уверенности) и подтверждает её OEM-номером,
+если он виден. Это поиск похожих деталей, а не гарантия совместимости.
 
 Мягкая деградация (как и везде в проекте):
 - есть ключ OpenRouter  → реальный vision + реальный поиск по Авито;
@@ -33,24 +35,32 @@ logger = logging.getLogger(__name__)
 MAX_OFFERS = 5
 
 DISCLAIMER = (
-    "Это похожие детали по фото, а не гарантия совместимости. "
-    "Точную применимость и OEM-номер по одной фотографии определить нельзя — "
-    "перед покупкой сверьте деталь по каталожному номеру и году/модели вашей техники."
+    "Марка/модель определяются ИИ как лучшая догадка по фото и не гарантируют "
+    "совместимость. Точнее всего — по OEM-номеру детали. Перед покупкой сверьте "
+    "каталожный номер с вашим автомобилем."
 )
 
 VISION_PART_PROMPT = (
     "Ты эксперт по автозапчастям и разборкам в РФ. На фото — деталь техники "
-    "(автомобиль, мото, спецтехника). Определи, ЧТО это за деталь, и собери "
-    "поисковый запрос для б/у объявлений на Авито. "
-    "Не выдумывай точную совместимость, если её не видно — лучше укажи общий тип детали. "
-    "Ответ СТРОГО одним JSON-объектом без пояснений: "
-    '{"part_name":"короткое название детали по-русски",'
-    '"category":"группа (Оптика|Кузов|Подвеска|Двигатель|Салон|Электрика|Колёса|Прочее)",'
-    '"vehicle_hint":"марка/модель если уверенно видно, иначе null",'
-    '"search_query":"строка для поиска на Авито (деталь + марка/модель если есть)",'
+    "(автомобиль, мото, спецтехника). Сделай ТРИ вещи:\n"
+    "1) Определи деталь — точное название по-русски, со стороной/позицией если видно "
+    "(напр. «фара передняя левая», «бампер задний», «зеркало боковое правое»).\n"
+    "2) Определи, ОТ КАКОГО АВТОМОБИЛЯ деталь: марка, модель, поколение и годы. "
+    "ВСЕГДА дай лучшую оценку по форме и дизайну детали, даже если не уверен на 100% — "
+    "честно отрази степень уверенности в confidence. Только если определить совсем нельзя — vehicle = null.\n"
+    "3) Найди на детали любые надписи: OEM/каталожный номер, клейма, логотип бренда "
+    "(Hella, Depo, Koito, Valeo, TYC и т.п.). Если виден номер — верни его в oem.\n"
+    "Затем собери максимально ТОЧНЫЙ поисковый запрос для б/у объявлений на Авито: "
+    "если есть OEM-номер — используй его (самый точный поиск); иначе «деталь + марка модель поколение».\n"
+    "Ответ СТРОГО одним JSON-объектом без пояснений:\n"
+    '{"part_name":"деталь со стороной/позицией",'
+    '"category":"Оптика|Кузов|Подвеска|Двигатель|Салон|Электрика|Колёса|Прочее",'
+    '"vehicle":"марка модель поколение годы, либо null",'
+    '"oem":"OEM/каталожный номер если виден, иначе null",'
+    '"search_query":"точная строка для Авито (OEM либо деталь+авто)",'
     '"keywords":["ключевые","слова"],'
     '"confidence":0-100,'
-    '"notes":"что мешает точности (если есть), иначе null"}'
+    '"notes":"что мешает точности, иначе null"}'
 )
 
 
@@ -59,7 +69,8 @@ class PartIdentification(BaseModel):
 
     part_name: str
     category: str | None = None
-    vehicle_hint: str | None = None
+    vehicle_hint: str | None = None  # марка/модель/поколение — лучшая догадка ИИ
+    oem: str | None = None  # OEM/каталожный номер, если виден на детали
     search_query: str
     keywords: list[str] = Field(default_factory=list)
     confidence: int = Field(default=50, ge=0, le=100)
@@ -77,23 +88,32 @@ class PartFinderResult(BaseModel):
 
 
 def _clean_json(raw: str) -> str:
+    """Снять markdown-обёртку ```...``` вокруг JSON-ответа модели и вернуть чистую строку."""
     raw = (raw or "{}").strip()
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
     return raw or "{}"
 
 
+def _clean_optional(value) -> str | None:
+    """Нормализовать опциональное текстовое поле от модели: пусто или «null»/«none»/«-» → None."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or text.lower() in {"null", "none", "-", "n/a", "нет"}:
+        return None
+    return text
+
+
 def _coerce_identification(data: dict) -> PartIdentification:
     """Аккуратно собрать PartIdentification из сырого ответа модели."""
     part_name = str(data.get("part_name") or "").strip() or "запчасть"
 
-    raw_query = str(data.get("search_query") or "").strip()
-    vehicle = data.get("vehicle_hint")
-    vehicle = str(vehicle).strip() if vehicle else None
-    if vehicle and vehicle.lower() in {"null", "none", "-"}:
-        vehicle = None
-
-    query = raw_query or " ".join(p for p in [part_name, vehicle] if p)
+    # модель может вернуть ключ "vehicle" (новый промпт) или "vehicle_hint" (старый)
+    vehicle = _clean_optional(data.get("vehicle") if data.get("vehicle") is not None else data.get("vehicle_hint"))
+    oem = _clean_optional(data.get("oem"))
+    category = _clean_optional(data.get("category"))
+    notes = _clean_optional(data.get("notes"))
 
     keywords = data.get("keywords") or []
     if not isinstance(keywords, list):
@@ -106,19 +126,23 @@ def _coerce_identification(data: dict) -> PartIdentification:
         confidence = 50
     confidence = max(0, min(100, confidence))
 
-    notes = data.get("notes")
-    notes = str(notes).strip() if notes else None
-    if notes and notes.lower() in {"null", "none"}:
-        notes = None
-
-    category = data.get("category")
-    category = str(category).strip() if category else None
+    # Запрос: берём предложенный моделью, иначе собираем из самого точного, что есть.
+    query = str(data.get("search_query") or "").strip()
+    if not query:
+        query = " ".join(p for p in [oem, part_name, vehicle] if p)
+    # Гарантируем, что OEM и авто попали в запрос (повышает точность поиска на Авито).
+    low = query.lower()
+    if oem and oem.lower() not in low:
+        query = f"{oem} {query}".strip()
+    if vehicle and vehicle.lower() not in query.lower():
+        query = f"{query} {vehicle}".strip()
 
     return PartIdentification(
         part_name=part_name,
         category=category,
         vehicle_hint=vehicle,
-        search_query=query,
+        oem=oem,
+        search_query=query or part_name,
         keywords=keywords,
         confidence=confidence,
         notes=notes,
@@ -131,7 +155,7 @@ async def _identify_part(photo_data_url: str, hint: str | None = None) -> PartId
 
     user_text = VISION_PART_PROMPT
     if hint and hint.strip():
-        user_text += f"\nПодсказка от пользователя (учти): {hint.strip()}"
+        user_text += f"\nПодсказка от пользователя (учти как факт): {hint.strip()}"
 
     client = _openrouter_client()
     response = await client.chat.completions.create(
@@ -146,7 +170,7 @@ async def _identify_part(photo_data_url: str, hint: str | None = None) -> PartId
             }
         ],
         temperature=0.2,
-        max_tokens=300,
+        max_tokens=400,
     )
     raw = _clean_json(response.choices[0].message.content or "{}")
     data = json.loads(raw)
@@ -155,20 +179,25 @@ async def _identify_part(photo_data_url: str, hint: str | None = None) -> PartId
     # Если пользователь дал подсказку, а модель её не учла в запросе — добавим.
     if hint and hint.strip() and hint.strip().lower() not in identification.search_query.lower():
         identification.search_query = f"{identification.search_query} {hint.strip()}".strip()
+        if not identification.vehicle_hint:
+            identification.vehicle_hint = hint.strip()
     return identification
 
 
 def _mock_result(hint: str | None = None) -> PartFinderResult:
     """Демо-результат без сети (нет ключа OpenRouter, но mock разрешён)."""
-    query = "фара передняя" + (f" {hint.strip()}" if hint and hint.strip() else "")
+    vehicle = hint.strip() if hint and hint.strip() else "Toyota Camry XV50 (2011–2017)"
+    oem = "81170-33B70"
+    query = f"{oem} фара передняя левая {vehicle}"
     identification = PartIdentification(
-        part_name="Фара передняя",
+        part_name="Фара передняя левая",
         category="Оптика",
-        vehicle_hint=hint.strip() if hint and hint.strip() else None,
+        vehicle_hint=vehicle,
+        oem=oem,
         search_query=query,
-        keywords=["фара", "передняя", "оптика"],
-        confidence=40,
-        notes="Демо-режим: ИИ-распознавание выключено (нет ключа OpenRouter).",
+        keywords=["фара", "передняя", "левая", "оптика"],
+        confidence=45,
+        notes="Демо-режим: ИИ-распознавание выключено (нет ключа OpenRouter). Это пример вывода.",
     )
     offers = [
         AvitoPartOffer(
