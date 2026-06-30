@@ -88,6 +88,7 @@ class PartFinderResult(BaseModel):
 
 
 def _clean_json(raw: str) -> str:
+    """Снять markdown-обёртку ```...``` вокруг JSON-ответа модели и вернуть чистую строку."""
     raw = (raw or "{}").strip()
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
@@ -95,6 +96,7 @@ def _clean_json(raw: str) -> str:
 
 
 def _clean_optional(value) -> str | None:
+    """Нормализовать опциональное текстовое поле от модели: пусто или «null»/«none»/«-» → None."""
     if value is None:
         return None
     text = str(value).strip()
