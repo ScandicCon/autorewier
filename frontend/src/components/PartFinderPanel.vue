@@ -65,7 +65,7 @@ function formatPrice(rub) {
       ПОИСК Б/У ДЕТАЛИ ПО ФОТО
     </div>
 
-    <p class="pf-hint">Сфотографируйте деталь — ИИ распознает её и найдёт похожие объявления на Авито. Можно добавить подсказку (марка/модель) для точности.</p>
+    <p class="pf-hint">Сфотографируйте деталь — ИИ определит, что это и от какого автомобиля, и найдёт похожие объявления на Авито. Подсказка (марка/модель) повышает точность.</p>
 
     <label class="btn btn-ghost pf-pick">
       <input type="file" accept="image/*" @change="onSelect" hidden>
@@ -105,10 +105,24 @@ function formatPrice(rub) {
           <span class="pf-part">{{ ident.part_name }}</span>
           <span class="pf-conf" :class="confClass">уверенность {{ ident.confidence }}%</span>
         </div>
-        <div class="pf-meta">
-          <span v-if="ident.category">{{ ident.category }}</span>
-          <span v-if="ident.vehicle_hint">· {{ ident.vehicle_hint }}</span>
+
+        <div class="pf-rows">
+          <div class="pf-row">
+            <span class="pf-row__k">Автомобиль</span>
+            <span class="pf-row__v" :class="{ 'pf-row__v--muted': !ident.vehicle_hint }">
+              {{ ident.vehicle_hint || 'по фото определить не удалось — добавьте подсказку' }}
+            </span>
+          </div>
+          <div v-if="ident.oem" class="pf-row">
+            <span class="pf-row__k">OEM-номер</span>
+            <span class="pf-row__v pf-oem">{{ ident.oem }}</span>
+          </div>
+          <div v-if="ident.category" class="pf-row">
+            <span class="pf-row__k">Категория</span>
+            <span class="pf-row__v">{{ ident.category }}</span>
+          </div>
         </div>
+
         <div v-if="result.demo" class="pf-badge-demo">Демо-режим (ИИ-распознавание выключено)</div>
         <p v-if="ident.notes" class="pf-notes">{{ ident.notes }}</p>
       </div>
@@ -120,11 +134,11 @@ function formatPrice(rub) {
         </div>
       </div>
       <p v-else class="pf-hint" style="margin-top:10px">
-        Похожих объявлений не нашлось. Попробуйте уточнить подсказку или открыть поиск на Авито.
+        Объявления внутри пока не подгружаются — открой поиск на Авито по кнопке ниже (запрос уже собран по детали и авто).
       </p>
 
       <a v-if="result.search_url" :href="result.search_url" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-block" style="margin-top:10px">
-        Открыть все результаты на Авито
+        Открыть результаты на Авито
       </a>
 
       <p class="pf-disclaimer">{{ result.disclaimer }}</p>
@@ -151,7 +165,12 @@ function formatPrice(rub) {
 .pf-conf--high { color: #7bd88f; }
 .pf-conf--medium { color: #ffb454; }
 .pf-conf--low { color: #ff5d5d; }
-.pf-meta { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.pf-rows { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.pf-row { display: flex; gap: 10px; font-size: 13.5px; }
+.pf-row__k { flex: 0 0 96px; color: var(--muted); }
+.pf-row__v { font-weight: 500; }
+.pf-row__v--muted { color: var(--muted); font-weight: 400; }
+.pf-oem { font-family: var(--font-mono, monospace); letter-spacing: .02em; }
 .pf-badge-demo { display: inline-block; margin-top: 8px; font-size: 11px; color: #ffb454; border: 1px solid #ffb454; border-radius: 999px; padding: 2px 8px; }
 .pf-notes { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
 .pf-offers { display: flex; flex-direction: column; gap: 8px; }
