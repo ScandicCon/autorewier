@@ -142,6 +142,13 @@ class Settings(BaseSettings):
     # True = новый Chromium на каждый запрос (стабильнее, без «context closed»)
     avito_browser_per_request: bool = True
 
+    # ScrapingBee (внешний скрейпинг-API для обхода антибота Avito).
+    # Без ключа всё работает на прямом httpx (мягкая деградация).
+    scrapingbee_api_key: str = ""
+    scrapingbee_render_js: bool = False
+    scrapingbee_premium_proxy: bool = True  # резидентные прокси (нужны для Avito)
+    scrapingbee_country_code: str = "ru"
+
     @field_validator("database_url", mode="before")
     @classmethod
     def normalize_database_url(cls, value: str | None) -> str:
@@ -188,6 +195,10 @@ class Settings(BaseSettings):
     @property
     def llm_enabled(self) -> bool:
         return bool(self.openrouter_api_key.strip())
+
+    @property
+    def scrapingbee_enabled(self) -> bool:
+        return bool(self.scrapingbee_api_key.strip())
 
     @property
     def autocode_enabled(self) -> bool:

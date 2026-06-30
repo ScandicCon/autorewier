@@ -11,6 +11,7 @@ from app.api.auth_routes import router as auth_router
 from app.api.payment_routes import router as payment_router
 from app.api.grz_routes import router as grz_router
 from app.api.photo_routes import router as photo_router
+from app.api.part_finder_routes import router as part_finder_router
 from app.api.robokassa_routes import router as robokassa_router
 from app.api.routes import router as api_router
 from app.config import BASE_DIR, settings
@@ -93,6 +94,7 @@ if FRONTEND_DIST.exists():
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(photo_router, prefix="/api/v1")
 app.include_router(grz_router, prefix="/api/v1")
+app.include_router(part_finder_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(payment_router, prefix="/api/v1")
 app.include_router(robokassa_router, prefix="/api/v1")

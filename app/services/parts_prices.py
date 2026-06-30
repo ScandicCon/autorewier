@@ -36,18 +36,11 @@ def _vehicle_suffix(vehicle: VehicleInput) -> str:
 
 
 async def _fetch_html(url: str) -> str | None:
-    try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=18.0,
-            headers={"User-Agent": USER_AGENT},
-        ) as client:
-            resp = await client.get(url)
-            if resp.status_code == 200:
-                return resp.text
-    except httpx.HTTPError:
-        return None
-    return None
+    # Единый слой загрузки: через ScrapingBee при наличии ключа, иначе прямой httpx.
+    # Это устойчивее к капче Avito; логика разбора ниже не меняется.
+    from app.services.scraping import fetch_html
+
+    return await fetch_html(url, timeout=18.0, user_agent=USER_AGENT)
 
 
 async def search_avito_parts(query: str) -> list[AvitoPartOffer]:
