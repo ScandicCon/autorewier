@@ -14,6 +14,7 @@ const routes = [
   { path: '/oauth-callback', component: () => import('../views/OAuthCallbackView.vue'), meta: { public: true } },
   { path: '/app', component: () => import('../views/DashboardView.vue') },
   { path: '/app/new', component: () => import('../views/NewInspectionView.vue') },
+  { path: '/app/parts', component: () => import('../views/PartFinderView.vue') },
   { path: '/app/inspection/:id', component: () => import('../views/InspectionDetailView.vue') },
 ]
 
