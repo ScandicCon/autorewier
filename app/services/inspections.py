@@ -5,6 +5,7 @@ from pydantic import ValidationError
 from app.models import Inspection, InspectionStage, User, Verdict, VinCheck
 from app.schemas import (
     AnalysisReport,
+    ImageFinding,
     InspectionComparisonItem,
     InspectionCreate,
     InspectionPostUpdate,
@@ -208,6 +209,9 @@ async def create_inspection(
     observed_defects = _dedupe_observed_defects(data.observed_defects)
     photos_metadata = _normalize_photo_metadata(data.photos_metadata)
     image_findings = await analyze_photo_urls(photos_metadata)
+    if data.extra_image_findings:
+        # Ручной анализ фото пользователя (не из объявления) — добавляем к авто-находкам.
+        image_findings = [*image_findings, *data.extra_image_findings]
     observed_defects_text = _defects_from_observed(observed_defects)
     image_defects_text = _image_findings_to_text(image_findings)
     pre_defects_text = "\n".join(
