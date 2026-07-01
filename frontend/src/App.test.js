@@ -1,151 +1,76 @@
 import { mount } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App.vue";
-import * as api from "./api/inspectionApi";
 
-vi.mock("./analytics", () => ({
-  trackEvent: vi.fn()
-}));
+// App.vue — это роутер-шелл: фон + <RouterView/> + баннер cookie-согласия.
+// Тестируем реальное поведение: показ/скрытие баннера и сохранение выбора.
 
-vi.mock("./api/inspectionApi", () => {
-  class ApiClientError extends Error {
-    constructor(message, status, details) {
-      super(message);
-      this.name = "ApiClientError";
-      this.status = status;
-      this.details = details;
-    }
-  }
-  return {
-    ApiClientError,
-    createInspection: vi.fn(),
-    fetchInspectionsHistory: vi.fn(),
-    fetchInspectionDetails: vi.fn(),
-    fetchHealth: vi.fn(),
-    fetchCurrentUser: vi.fn(),
-    fetchAdminHealth: vi.fn(),
-    fetchAdminStats: vi.fn(),
-    probeSupportContracts: vi.fn(),
-    requestVerificationCode: vi.fn(),
-    confirmVerificationCode: vi.fn()
-  };
-});
-
-async function flushUi() {
-  await Promise.resolve();
-  await nextTick();
-  await Promise.resolve();
-}
+const CONSENT_KEY = "analytics_consent";
 
 function mountApp() {
   return mount(App, {
     global: {
       stubs: {
-        HeroSection: true,
-        HistoryPanel: true,
-        InspectionComposer: true,
-        InspectionOverview: true,
-        RecommendationBanner: true
+        RouterView: { template: "<div data-test='route'>route-content</div>" },
+        RouterLink: { template: "<a><slot /></a>" }
       }
     }
   });
 }
 
-function setHappyPathApi() {
-  api.fetchInspectionsHistory.mockResolvedValue([]);
-  api.fetchHealth.mockResolvedValue({ status: "ok", service: "autorewier" });
-  api.fetchCurrentUser.mockResolvedValue({
-    email: "ops@autorewier.test",
-    plan: "pro",
-    is_pro: true
-  });
-  api.fetchAdminHealth.mockResolvedValue({
-    ok: true,
-    app_version: "0.2.0",
-    environment: "test"
-  });
-  api.fetchAdminStats.mockResolvedValue({
-    users_total: 10,
-    inspections_total: 25,
-    payments_total: 7,
-    succeeded_payments: 6
-  });
-  api.probeSupportContracts.mockResolvedValue({
-    health: { state: "missing", status: 404, message: "Контракт не опубликован в backend." },
-    stats: { state: "missing", status: 404, message: "Контракт не опубликован в backend." }
-  });
-}
-
-describe("App operations states", () => {
+describe("App shell", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    setHappyPathApi();
+    localStorage.clear();
+    delete window.__initAnalytics;
   });
 
-  it("shows 401 authorization banner for protected history request", async () => {
-    api.fetchInspectionsHistory.mockRejectedValueOnce(
-      new api.ApiClientError("Unauthorized", 401, { detail: "Not authenticated" })
-    );
-    api.fetchCurrentUser.mockRejectedValueOnce(new api.ApiClientError("Unauthorized", 401, null));
-
-    const wrapper = mountApp();
-    await flushUi();
-
-    const text = wrapper.text();
-    expect(text).toContain("Требуется авторизация. Войдите в кабинет и повторите действие.");
-    expect(text).toContain("401");
+  afterEach(() => {
+    localStorage.clear();
   });
 
-  it("renders degraded fallback states for missing/forbidden contracts", async () => {
-    api.fetchAdminHealth.mockRejectedValueOnce(new api.ApiClientError("Forbidden", 403, null));
-    api.fetchAdminStats.mockRejectedValueOnce(new api.ApiClientError("Forbidden", 403, null));
-    api.probeSupportContracts.mockResolvedValueOnce({
-      health: { state: "missing", status: 404, message: "Контракт не опубликован в backend." },
-      stats: { state: "missing", status: 404, message: "Контракт не опубликован в backend." }
-    });
-
+  it("renders router content and cookie banner when consent not decided", async () => {
     const wrapper = mountApp();
-    await flushUi();
+    await nextTick();
 
-    const text = wrapper.text();
-    expect(text).toContain("Режим degraded");
-    expect(text).toContain("Контракт не опубликован в backend.");
-    expect(text).toContain("fallback через кабинет");
+    expect(wrapper.find("[data-test='route']").exists()).toBe(true);
+    expect(wrapper.text()).toContain("Мы используем аналитические cookie");
   });
 
-  it("retries operations status and clears degraded banner after recovery", async () => {
-    api.fetchAdminHealth
-      .mockRejectedValueOnce(new api.ApiClientError("Forbidden", 403, null))
-      .mockResolvedValueOnce({ ok: true, app_version: "0.2.0", environment: "test" });
-    api.fetchAdminStats
-      .mockRejectedValueOnce(new api.ApiClientError("Forbidden", 403, null))
-      .mockResolvedValueOnce({
-        users_total: 10,
-        inspections_total: 25,
-        payments_total: 7,
-        succeeded_payments: 6
-      });
-    api.probeSupportContracts
-      .mockResolvedValueOnce({
-        health: { state: "missing", status: 404, message: "Контракт не опубликован в backend." },
-        stats: { state: "missing", status: 404, message: "Контракт не опубликован в backend." }
-      })
-      .mockResolvedValueOnce({
-        health: { state: "ok", status: 200, message: "Контракт доступен." },
-        stats: { state: "ok", status: 200, message: "Контракт доступен." }
-      });
+  it("does not show cookie banner when consent already stored", async () => {
+    localStorage.setItem(CONSENT_KEY, "granted");
 
     const wrapper = mountApp();
-    await flushUi();
-    expect(wrapper.text()).toContain("Режим degraded");
+    await nextTick();
 
-    await wrapper.get(".ops-retry").trigger("click");
-    await flushUi();
+    expect(wrapper.text()).not.toContain("Мы используем аналитические cookie");
+  });
 
-    expect(api.fetchAdminHealth).toHaveBeenCalledTimes(2);
-    expect(api.fetchAdminStats).toHaveBeenCalledTimes(2);
-    expect(wrapper.text()).not.toContain("Режим degraded");
-    expect(wrapper.text()).toContain("Контракт доступен.");
+  it("accept stores consent and initializes analytics", async () => {
+    const initAnalytics = vi.fn();
+    window.__initAnalytics = initAnalytics;
+
+    const wrapper = mountApp();
+    await nextTick();
+
+    await wrapper.get(".cc-accept").trigger("click");
+
+    expect(localStorage.getItem(CONSENT_KEY)).toBe("granted");
+    expect(initAnalytics).toHaveBeenCalledTimes(1);
+    expect(wrapper.text()).not.toContain("Мы используем аналитические cookie");
+  });
+
+  it("decline stores denial and hides banner without analytics", async () => {
+    const initAnalytics = vi.fn();
+    window.__initAnalytics = initAnalytics;
+
+    const wrapper = mountApp();
+    await nextTick();
+
+    await wrapper.get(".cc-decline").trigger("click");
+
+    expect(localStorage.getItem(CONSENT_KEY)).toBe("denied");
+    expect(initAnalytics).not.toHaveBeenCalled();
+    expect(wrapper.text()).not.toContain("Мы используем аналитические cookie");
   });
 });

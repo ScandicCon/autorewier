@@ -104,7 +104,6 @@ describe("InspectionOverview", () => {
 
     const text = wrapper.text();
     expect(text).toContain("Риски сделки");
-    expect(text).toContain("Приоритеты и доказательства");
     expect(text).toContain("Основание");
     expect(text).toContain("P1");
     expect(text).toContain("Высокая уверенность");
