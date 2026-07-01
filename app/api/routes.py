@@ -40,6 +40,7 @@ from app.services.inspections import (
 from app.services.analytics import track_event
 from app.services.parsers import parse_listing_url
 from app.services.parsers.avito_fetch import AvitoFetchStatus, warmup_avito_session
+from app.services.auth import is_guest_user
 from app.services.subscription import is_pro_active
 from app.services.task_queue import enqueue_tracked_task, get_task_status
 
@@ -63,6 +64,7 @@ async def me(user: User = Depends(get_current_user)):
         "plan": user.subscription_plan.value,
         "pro_until": user.subscription_until.isoformat() if user.subscription_until else None,
         "is_pro": is_pro_active(user),
+        "is_guest": is_guest_user(user),
         "inspections_this_month": user.inspections_this_month,
     }
 
@@ -116,8 +118,12 @@ async def create_inspection_api(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
-    if (settings.enforce_verified_accounts or settings.require_email_verification) and not (
-        bool(user.email_verified) or bool(user.phone_verified)
+    # Гости освобождены от требования верификации: их квота — guest_inspections_limit
+    # проверок, а создание гостевых сессий ограничено по IP (см. /auth/guest).
+    if (
+        (settings.enforce_verified_accounts or settings.require_email_verification)
+        and not is_guest_user(user)
+        and not (bool(user.email_verified) or bool(user.phone_verified))
     ):
         raise HTTPException(
             403,

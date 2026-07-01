@@ -1,12 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchInspectionDetails, getToken } from '../api/inspectionApi'
+import { fetchCurrentUser, fetchInspectionDetails, getToken } from '../api/inspectionApi'
 
 const route = useRoute()
 const inspection = ref(null)
 const loading = ref(true)
 const error = ref('')
+
+// Гость (проверка без регистрации): показываем баннер «сохрани отчёт».
+const isGuest = ref(false)
 
 // Lightbox
 const lightboxIdx = ref(null)
@@ -61,6 +64,7 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  try { isGuest.value = Boolean((await fetchCurrentUser())?.is_guest) } catch {}
 })
 onUnmounted(() => { window.removeEventListener('keydown', onKeydown) })
 
@@ -237,6 +241,14 @@ function priorityLabel(priority) {
 
   <!-- CONTENT -->
   <div v-else-if="inspection" class="wrap" style="padding-top:24px;padding-bottom:60px">
+
+    <!-- GUEST BANNER: отчёт без аккаунта живёт только в этом браузере -->
+    <div v-if="isGuest" class="guest-banner">
+      <span class="guest-banner-text">
+        Отчёт привязан к этому браузеру. Создайте бесплатный аккаунт — история проверок сохранится.
+      </span>
+      <router-link class="btn btn-primary guest-banner-btn" to="/register">Сохранить отчёт</router-link>
+    </div>
 
     <!-- BANNER -->
     <div class="pbanner">
@@ -647,4 +659,15 @@ function priorityLabel(priority) {
 .torg-top-risks:first-child .torg-subhead { margin-top: 0; }
 .torg-script { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--fg); line-height: 1.5; }
 .torg-script:last-child { border-bottom: none; }
+
+.guest-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  padding: 14px 18px; margin-bottom: 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(63,208,255,.12), transparent);
+  border: 1px solid rgba(63,208,255,.3);
+}
+.guest-banner-text { font-size: 14px; color: var(--fg); line-height: 1.5; flex: 1 1 280px; }
+.guest-banner-btn { flex: 0 0 auto; font-size: 13px; }
 </style>

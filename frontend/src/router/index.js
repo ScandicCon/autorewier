@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { checkAuth } from '../api/inspectionApi'
+import { checkAuth, startGuestSession } from '../api/inspectionApi'
 
 const routes = [
   { path: '/', component: () => import('../views/LandingView.vue'), meta: { public: true } },
@@ -34,6 +34,13 @@ router.beforeEach(async (to) => {
     await checkAuth()
     return true
   } catch {
+    // Новая проверка доступна без регистрации: молча создаём гостевую сессию.
+    if (to.path === '/app/new') {
+      try {
+        await startGuestSession()
+        return true
+      } catch { /* rate limit или бэкенд недоступен — уводим на логин */ }
+    }
     return '/login'
   }
 })

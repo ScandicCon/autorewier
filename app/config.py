@@ -67,6 +67,9 @@ class Settings(BaseSettings):
 
     subscription_pro_price_rub: int = 990
     free_inspections_per_month: int = 3
+    # Гостевой режим: проверка без регистрации (первое касание с TikTok/рекламы).
+    # Гость = User без email/телефона/Telegram/пароля, сессия через обычную куку.
+    guest_inspections_limit: int = 1
     pro_vin_reports_included: int = 10  # включённых VIN-отчётов в Pro/мес (защита маржи)
     sentry_dsn: str = ""
     sentry_traces_sample_rate: float = 0.1
@@ -104,6 +107,9 @@ class Settings(BaseSettings):
     rate_limit_webhook_window_seconds: int = 60
     rate_limit_vin_limit: int = 30
     rate_limit_vin_window_seconds: int = 60
+    # Создание гостевых сессий (по IP): защита от фарма бесплатных проверок.
+    rate_limit_guest_limit: int = 10
+    rate_limit_guest_window_seconds: int = 3600
 
     # CORS — comma-separated extra origins (e.g. Vercel frontend URL in production)
     # Example: CORS_EXTRA_ORIGINS=https://autorewier.vercel.app
