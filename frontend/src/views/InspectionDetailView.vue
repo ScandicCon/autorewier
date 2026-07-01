@@ -125,14 +125,34 @@ const p1Count = computed(() =>
   risks.value.filter(r => r.severity === 'high' || r.priority === 'high').length
 )
 
-const recommendations = computed(() => {
-  const r = report.value
-  if (!r) return []
-  return [
-    ...(r.preference_notes || []),
-    ...(r.negotiation_tips || []),
-  ].filter(Boolean)
+// Топ-3 риска для hero-блока (высокие — первыми).
+const topRisks = computed(() => {
+  const order = { high: 0, medium: 1, low: 2 }
+  return [...risks.value]
+    .sort((a, b) => (order[a.severity] ?? 3) - (order[b.severity] ?? 3))
+    .slice(0, 3)
 })
+
+// Готовые фразы для торга с продавцом (отдельно от общих рекомендаций — это hero-фича).
+const negotiationTips = computed(() => report.value?.negotiation_tips || [])
+
+// Сумма, на которую можно торговаться — берём смету ремонта (уже посчитана и понятна пользователю).
+const negotiationAmount = computed(() => repairRange.value)
+
+const recommendations = computed(() => report.value?.preference_notes || [])
+
+// Находки нейросети по фото (из объявления + загруженные пользователем вручную).
+const imageFindings = computed(() => report.value?.image_findings || [])
+
+function findingColor(confidence) {
+  if (confidence === 'high') return 'var(--risk)'
+  if (confidence === 'low') return 'var(--safe)'
+  return 'var(--cau)'
+}
+
+function findingLabel(confidence) {
+  return { high: 'высокая увер.', medium: 'средняя увер.', low: 'низкая увер.' }[confidence] || confidence
+}
 
 // New report sections
 const modelWeakPoints = computed(() => report.value?.model_weak_points || [])
@@ -298,6 +318,44 @@ function priorityLabel(priority) {
             </div>
           </div>
 
+          <!-- TORG HERO: главный повод вернуться к бесплатному сервису — конкретная сумма и фразы для торга -->
+          <div v-if="negotiationAmount || negotiationTips.length || topRisks.length" class="panel hud torg-hero" style="margin-bottom:16px">
+            <div class="panel-h">
+              <svg class="ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              <h2>Торг с продавцом</h2>
+            </div>
+            <div class="panel-b">
+              <div v-if="negotiationAmount" class="torg-amount">
+                <span class="torg-amount__label">Аргумент для скидки — смета ремонта</span>
+                <span class="torg-amount__value">{{ negotiationAmount }}</span>
+              </div>
+
+              <div v-if="topRisks.length" class="torg-top-risks">
+                <div class="torg-subhead">Топ-{{ topRisks.length }} риска для разговора с продавцом</div>
+                <div
+                  v-for="(risk, i) in topRisks"
+                  :key="i"
+                  class="issue-row"
+                  :class="risk.severity === 'high' ? 'issue-p1' : 'issue-p2'"
+                >
+                  <span class="issue-badge">{{ risk.severity === 'high' ? 'P1' : 'P2' }}</span>
+                  <div>
+                    <div class="issue-title">{{ risk.title }}</div>
+                    <div class="issue-desc">{{ risk.description }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="negotiationTips.length" class="torg-scripts">
+                <div class="torg-subhead">Готовые фразы продавцу</div>
+                <div v-for="(tip, i) in negotiationTips" :key="i" class="torg-script">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:3px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <span>{{ tip }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- RISKS -->
           <div v-if="risks.length" class="panel hud" style="margin-bottom:16px">
             <div class="panel-h">
@@ -319,6 +377,27 @@ function priorityLabel(priority) {
                   <div class="issue-desc">{{ risk.description }}</div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- ФОТО-АНАЛИЗ НЕЙРОСЕТЬЮ -->
+          <div v-if="imageFindings.length" class="panel hud" style="margin-bottom:16px">
+            <div class="panel-h">
+              <svg class="ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <h2>Анализ фото нейросетью</h2>
+              <span class="sp"></span>
+              <span style="font-size:12px;color:var(--muted)">{{ imageFindings.length }} находок</span>
+            </div>
+            <div class="panel-b">
+              <div v-for="(f, i) in imageFindings" :key="i" class="issue-row">
+                <span class="issue-badge" :style="{ background: 'transparent', border: `1px solid ${findingColor(f.confidence)}`, color: findingColor(f.confidence) }">{{ findingLabel(f.confidence) }}</span>
+                <div>
+                  <div class="issue-title">{{ f.zone || 'Зона не определена' }}</div>
+                  <div class="issue-desc">{{ f.issue }}</div>
+                  <div v-if="f.action" style="color:var(--cyan);font-size:12.5px;margin-top:4px">→ {{ f.action }}</div>
+                </div>
+              </div>
+              <p style="color:var(--muted);font-size:12px;margin-top:10px">Предварительные сигналы по фото — подтвердите на очном осмотре.</p>
             </div>
           </div>
 
@@ -552,3 +631,20 @@ function priorityLabel(priority) {
     <div class="wrap"><div class="copy">© 2026 ПОДКАПОТ</div></div>
   </footer>
 </template>
+
+<style scoped>
+.torg-hero { border-color: rgba(63, 208, 255, .35); }
+.torg-amount {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 16px; margin-bottom: 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(63,208,255,.14), transparent);
+  border: 1px solid rgba(63,208,255,.25);
+}
+.torg-amount__label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.torg-amount__value { font-family: 'Unbounded', sans-serif; font-size: 22px; font-weight: 700; color: var(--cyan); }
+.torg-subhead { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; margin: 14px 0 6px; }
+.torg-top-risks:first-child .torg-subhead { margin-top: 0; }
+.torg-script { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--fg); line-height: 1.5; }
+.torg-script:last-child { border-bottom: none; }
+</style>

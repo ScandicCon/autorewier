@@ -422,6 +422,9 @@ class InspectionCreate(BaseModel):
     pre_defects: str | None = None
     observed_defects: list[ObservedDefectInput] = Field(default_factory=list)
     photos_metadata: list[PhotoMetadataInput] = Field(default_factory=list)
+    # Находки от ручного анализа фото пользователя (POST /photos/analyze на шаге формы) —
+    # фото не привязаны к объявлению и не парсятся повторно, поэтому передаются уже готовыми.
+    extra_image_findings: list[ImageFinding] = Field(default_factory=list)
     is_reseller: bool = False
     target_resale_price: int | None = None
     require_avito_parse: bool = False

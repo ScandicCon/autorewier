@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { analyzePhotos } from '../api/inspectionApi'
 
+const emit = defineEmits(['analyzed'])
+
 const MAX_FILES = 5
 
 const files = ref([])
@@ -15,6 +17,7 @@ function onSelect(event) {
   error.value = ''
   done.value = false
   findings.value = []
+  emit('analyzed', [])
   const picked = Array.from(event.target.files || [])
   const images = picked.filter((f) => f.type.startsWith('image/'))
   if (images.length === 0) {
@@ -39,6 +42,7 @@ async function run() {
   try {
     findings.value = await analyzePhotos(files.value)
     done.value = true
+    emit('analyzed', findings.value)
   } catch (e) {
     error.value = e?.message || 'Не удалось проанализировать фото. Попробуйте ещё раз.'
   } finally {
@@ -58,7 +62,7 @@ function confidenceLabel(c) {
       АНАЛИЗ ФОТО НЕЙРОСЕТЬЮ (до {{ MAX_FILES }})
     </div>
 
-    <p class="pa-hint">Загрузите фото кузова — ИИ подсветит возможные повреждения по зонам.</p>
+    <p class="pa-hint">Загрузите свои фото кузова (необязательно, если уже есть фото из объявления) — ИИ подсветит возможные повреждения по зонам. Результат попадёт в отчёт.</p>
 
     <label class="btn btn-ghost pa-pick">
       <input type="file" accept="image/*" multiple @change="onSelect" hidden>
