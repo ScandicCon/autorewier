@@ -54,11 +54,7 @@ onMounted(async () => {
   <header class="nav">
     <div class="wrap">
       <router-link class="logo" :to="isLoggedIn ? '/app' : '/'">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="#3fd0ff" fill-opacity=".15"/>
-          <path d="M16 6 8 22h16z" stroke="#3fd0ff" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
-          <circle cx="16" cy="17" r="2" fill="#3fd0ff"/>
-        </svg>
+        <img class="logo-ico" src="/img/logo-mark.png" alt="" aria-hidden="true">
         ПОДКАПОТ
       </router-link>
       <nav class="nav-links" :class="{ open: menuOpen }">
@@ -268,7 +264,7 @@ onMounted(async () => {
     <div class="wrap">
       <div class="cols">
         <div>
-          <div class="logo" style="margin-bottom:12px;font-size:17px">ПОДКАПОТ</div>
+          <div class="logo" style="margin-bottom:12px;font-size:17px"><img class="logo-ico" src="/img/logo-mark.png" style="width:28px;height:28px" alt="">ПОДКАПОТ</div>
           <p style="font-size:13px;color:var(--faint);max-width:260px">Интеллектуальный анализ подержанных авто перед покупкой.</p>
         </div>
         <div>
