@@ -66,8 +66,22 @@ async function run() {
 .pc-hint { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
 .pc-row { display: flex; gap: 10px; align-items: stretch; }
 .pc-input {
+  /* Тот же вид, что у полей формы (.composer-grid input) — панель живёт
+     вне грида, поэтому глобальный стиль сюда не дотягивается. */
   flex: 1; text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+  background: rgba(8, 14, 32, .6);
+  border: 1px solid var(--line2);
+  border-radius: 9px;
+  color: var(--ink);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .18s;
 }
+.pc-input:focus { border-color: var(--cyan); }
+.pc-input:disabled { opacity: .5; }
+.pc-input::placeholder { color: var(--faint); text-transform: none; letter-spacing: normal; font-weight: 400; }
 .pc-result {
   margin-top: 14px; border: 1px solid var(--line, rgba(255,255,255,0.12));
   border-radius: 10px; padding: 12px; background: rgba(255,255,255,0.02);

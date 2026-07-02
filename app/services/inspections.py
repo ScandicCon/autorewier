@@ -150,7 +150,9 @@ async def _enrich_report(
         report, vehicle, defects, user_preferences, listing_repairs
     )
     categories = [line.category for line in report.repair_lines] or ["Прочее"]
-    parts = await build_parts_pricing(vehicle, defects, categories)
+    parts = await build_parts_pricing(
+        vehicle, defects, categories, repair_lines=report.repair_lines
+    )
     return _apply_parts_to_report(report, parts)
 
 

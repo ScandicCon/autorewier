@@ -473,12 +473,10 @@ function priorityLabel(priority) {
                   <div v-for="(part, i) in partsPricing" :key="i" class="part-card">
                     <div style="flex:1;min-width:0">
                       <div style="font-size:14px;font-weight:600;color:var(--fg);margin-bottom:4px">{{ part.part_name }}</div>
-                      <div style="font-size:13px;color:var(--cyan);font-variant-numeric:tabular-nums;font-weight:700">
-                        <template v-if="part.estimate_min || part.min_rub">
-                          {{ fmt(part.estimate_min || part.min_rub) }} – {{ fmt(part.estimate_max || part.max_rub) }} ₽
-                        </template>
-                        <template v-else>— — ₽</template>
+                      <div v-if="part.estimate_min || part.min_rub" style="font-size:13px;color:var(--cyan);font-variant-numeric:tabular-nums;font-weight:700">
+                        {{ fmt(part.estimate_min || part.min_rub) }} – {{ fmt(part.estimate_max || part.max_rub) }} ₽
                       </div>
+                      <div v-if="part.search_query" style="font-size:11px;color:var(--faint);margin-top:3px">Поиск: {{ part.search_query }}</div>
                       <div v-if="part.note" style="font-size:11px;color:var(--faint);margin-top:3px">{{ part.note }}</div>
                     </div>
                     <a v-if="part.search_url" :href="part.search_url" target="_blank" rel="noopener"
