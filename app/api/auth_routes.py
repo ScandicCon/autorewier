@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +18,10 @@ from app.services.auth import (
     authenticate_user,
     change_password,
     confirm_verification_code,
+    create_guest_user,
     create_jwt,
+    get_user_by_session,
+    is_guest_user,
     issue_password_reset,
     issue_verification_code,
     register_user,
@@ -37,11 +40,40 @@ from app.schemas import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+@router.post("/guest")
+async def guest_session(
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_db),
+    session_cookie: str | None = Cookie(None, alias=COOKIE_NAME),
+):
+    """Гостевая сессия: проверка авто без регистрации.
+
+    Если валидная сессия уже есть (гостевая или полная) — возвращаем её,
+    новый пользователь не создаётся. Создание гостей ограничено по IP.
+    """
+    existing = await get_user_by_session(session, session_cookie)
+    if existing:
+        return {"id": existing.id, "guest": is_guest_user(existing)}
+    await enforce_rate_limit(
+        request,
+        scope="auth_guest",
+        limit=settings.rate_limit_guest_limit,
+        window_seconds=settings.rate_limit_guest_window_seconds,
+    )
+    user = await create_guest_user(session)
+    response.set_cookie(COOKIE_NAME, user.session_token, **session_cookie_kwargs())
+    await track_event("auth_guest", user_id=user.id, props={"origin": "api"})
+    return {"id": user.id, "guest": True}
+
+
 @router.post("/register")
 async def register(
     body: RegisterRequest,
     request: Request,
+    response: Response,
     session: AsyncSession = Depends(get_db),
+    session_cookie: str | None = Cookie(None, alias=COOKIE_NAME),
 ):
     await enforce_rate_limit(
         request,
@@ -49,16 +81,32 @@ async def register(
         limit=settings.rate_limit_register_limit,
         window_seconds=settings.rate_limit_register_window_seconds,
     )
+    # Если регистрируется гость — апгрейдим его аккаунт, сохраняя историю проверок.
+    current = await get_user_by_session(session, session_cookie)
+    upgrading = bool(current and is_guest_user(current))
     try:
-        user = await register_user(session, body.email, body.password)
+        user = await register_user(
+            session, body.email, body.password,
+            upgrade_user=current if upgrading else None,
+        )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
-    await track_event("auth_register", user_id=user.id, props={"origin": "api"})
+    if upgrading:
+        # Гость уже «в системе» — обновляем куку и не гоняем его через логин.
+        response.set_cookie(COOKIE_NAME, user.session_token, **session_cookie_kwargs())
+    await track_event(
+        "auth_register", user_id=user.id, props={"origin": "api", "from_guest": upgrading}
+    )
     return {
         "id": user.id,
         "email": user.email,
         "email_verified": bool(user.email_verified),
-        "message": "Регистрация прошла успешно. Войдите в систему.",
+        "upgraded_from_guest": upgrading,
+        "message": (
+            "Аккаунт создан — история проверок сохранена."
+            if upgrading
+            else "Регистрация прошла успешно. Войдите в систему."
+        ),
     }
 
 
@@ -101,7 +149,12 @@ async def logout(response: Response):
 
 @router.get("/check")
 async def check_auth(user: User = Depends(get_current_user)):
-    return {"authenticated": True, "email": user.email, "email_verified": user.email_verified}
+    return {
+        "authenticated": True,
+        "email": user.email,
+        "email_verified": user.email_verified,
+        "is_guest": is_guest_user(user),
+    }
 
 
 @router.get("/me")

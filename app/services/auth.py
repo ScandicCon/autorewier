@@ -106,8 +106,33 @@ def issue_session(user: User) -> None:
     user.session_expires_at = now + session_ttl()
 
 
+def is_guest_user(user: User) -> bool:
+    """Гость: есть сессия, но нет ни одного идентификатора.
+
+    Гостевые пользователи создаются через POST /auth/guest для проверки
+    без регистрации; при регистрации строка апгрейдится в полный аккаунт
+    (история проверок сохраняется).
+    """
+    return not any(
+        [user.email, user.telegram_id, user.phone_number, user.password_hash, user.oauth_provider]
+    )
+
+
+async def create_guest_user(session: AsyncSession) -> User:
+    """Создаёт гостевого пользователя с активной сессией (кука как при логине)."""
+    user = User()
+    issue_session(user)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
 async def register_user(
-    session: AsyncSession, email: str, password: str
+    session: AsyncSession,
+    email: str,
+    password: str,
+    upgrade_user: User | None = None,
 ) -> User:
     email = email.strip().lower()
     if "@" not in email:
@@ -117,6 +142,17 @@ async def register_user(
     existing = await session.execute(select(User).where(User.email == email))
     if existing.scalar_one_or_none():
         raise ValueError("Email уже зарегистрирован")
+    if upgrade_user is not None and is_guest_user(upgrade_user):
+        # Гость регистрируется: апгрейдим его же строку, чтобы сохранить
+        # историю проверок, сделанных без аккаунта.
+        user = upgrade_user
+        user.email = email
+        user.password_hash = hash_password(password)
+        user.email_verified = False
+        issue_session(user)
+        await session.commit()
+        await session.refresh(user)
+        return user
     user = User(
         email=email,
         password_hash=hash_password(password),
