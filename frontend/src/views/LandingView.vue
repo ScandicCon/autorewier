@@ -27,15 +27,13 @@ function toggleMenu() {
 }
 
 function goAnalyze() {
-  if (isLoggedIn.value) {
-    const url = listingUrl.value.trim()
-    if (url) {
-      router.push({ path: '/app/new', query: { url } })
-    } else {
-      router.push('/app/new')
-    }
+  // Первая проверка доступна без регистрации (гостевая сессия создаётся
+  // роутер-гардом), поэтому ведём в /app/new независимо от логина.
+  const url = listingUrl.value.trim()
+  if (url) {
+    router.push({ path: '/app/new', query: { url } })
   } else {
-    router.push('/register')
+    router.push('/app/new')
   }
 }
 

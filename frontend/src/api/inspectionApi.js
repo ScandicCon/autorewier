@@ -147,6 +147,12 @@ export async function checkAuth() {
   return request("/auth/check");
 }
 
+// Гостевая сессия: проверка авто без регистрации.
+// Бэкенд ставит обычную сессионную куку; при регистрации история сохраняется.
+export async function startGuestSession() {
+  return request("/auth/guest", { method: "POST" });
+}
+
 export async function registerWithConfirm(email, password, passwordConfirm) {
   return request("/auth/register", {
     method: "POST",

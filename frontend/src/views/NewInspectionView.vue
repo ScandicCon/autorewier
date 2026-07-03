@@ -20,6 +20,7 @@ const parsing = ref(false)
 const parseError = ref('')
 const error = ref('')
 const parsedPhotos = ref([])
+const ownPhotoFindings = ref([])
 
 const form = reactive({
   listing_url: '',
@@ -80,6 +81,10 @@ async function fetchListing(url) {
   }
 }
 
+function onOwnPhotoFindings(findings) {
+  ownPhotoFindings.value = findings || []
+}
+
 function goNext() {
   if (!form.brand && !form.listing_url) { error.value = 'Введите ссылку или марку автомобиля'; return }
   error.value = ''
@@ -107,6 +112,7 @@ async function submit() {
         zone: null,
         note: form.photo_note?.trim() ? `${form.photo_note.trim()} · фото ${i + 1}` : null
       })),
+      extra_image_findings: ownPhotoFindings.value,
       // Only re-parse on backend when the frontend pre-parse succeeded (photos loaded).
       // If pre-parse failed the user filled data manually — skip the slow backend fetch.
       require_avito_parse: Boolean(form.listing_url) && source === 'avito' && parsedPhotos.value.length > 0
@@ -263,7 +269,7 @@ async function submit() {
           </div>
         </div>
 
-        <PhotoAnalysisPanel />
+        <PhotoAnalysisPanel @analyzed="onOwnPhotoFindings" />
 
         <PlateCheckPanel />
 

@@ -141,17 +141,44 @@ def _categories_from_defects(defects: str | None, repair_categories: list[str]) 
     return cats[:4]
 
 
+def _split_parts_hint(hint: str) -> list[str]:
+    parts = re.split(r"[,;+/]|\bи\b", hint)
+    return [p.strip(" .") for p in parts if len(p.strip(" .")) >= 4]
+
+
+def _part_names_for_category(
+    category: str,
+    repair_lines: list | None,
+    queries_map: dict[str, list[str]],
+) -> list[str]:
+    """Названия деталей для поиска цен.
+
+    Приоритет — конкретные детали из сметы ремонта (parts_hint строк
+    repair_lines этой категории): они привязаны к реальным находкам отчёта.
+    Шаблонный словарь part_queries.json — только fallback, когда смета
+    не подсказала ничего конкретного.
+    """
+    hints: list[str] = []
+    for line in repair_lines or []:
+        if getattr(line, "category", None) == category and getattr(line, "parts_hint", None):
+            hints.extend(_split_parts_hint(line.parts_hint))
+    if hints:
+        return list(dict.fromkeys(hints))[:2]
+    return queries_map.get(category, queries_map.get("Прочее", ["запчасть"]))[:2]
+
+
 async def build_parts_pricing(
     vehicle: VehicleInput,
     defects: str | None,
     repair_categories: list[str],
+    repair_lines: list | None = None,
 ) -> list[PartPriceBlock]:
     queries_map = _load_part_queries()
     suffix = _vehicle_suffix(vehicle)
     blocks: list[PartPriceBlock] = []
 
     for category in _categories_from_defects(defects, repair_categories):
-        part_names = queries_map.get(category, queries_map.get("Прочее", ["запчасть"]))[:2]
+        part_names = _part_names_for_category(category, repair_lines, queries_map)
         for part_name in part_names:
             query = f"{part_name} {suffix}".strip()
             avito_offers = await search_avito_parts(query)

@@ -30,8 +30,18 @@ def _reset_month_counter(user: User) -> None:
 
 
 def can_create_inspection(user: User) -> tuple[bool, str]:
+    from app.services.auth import is_guest_user
+
     _reset_month_counter(user)
     if is_pro_active(user):
+        return True, ""
+    if is_guest_user(user):
+        if user.inspections_this_month >= settings.guest_inspections_limit:
+            return (
+                False,
+                "Бесплатная проверка без аккаунта уже использована. "
+                "Создайте бесплатный аккаунт — история сохранится, а лимит станет больше.",
+            )
         return True, ""
     if user.inspections_this_month >= settings.free_inspections_per_month:
         return (
