@@ -954,6 +954,33 @@ async def maybe_enrich_with_llm(
         report = await enrich_report_with_llm(
             report, vehicle, defects, user_preferences, listing_repairs
         )
+        # Пересчёт итогов после LLM-обогащения. Без этого отчёт противоречит
+        # сам себе: «Рекомендуем, риск 0%» рядом со списком P1-рисков.
+        #
+        # LLM-риски (evidence.source == "llm") — типовые слабые места модели,
+        # а не подтверждённые дефекты, поэтому они дают приглушённый вклад
+        # с потолком 30 пунктов; подтверждённые риски считаются полным весом.
+        confirmed = [
+            r for r in report.risks
+            if not any(e.source == "llm" for e in (r.evidence or []))
+        ]
+        speculative_weights = {"high": 6, "medium": 3, "low": 1}
+        speculative_score = min(30, sum(
+            speculative_weights.get(str(r.severity.value if hasattr(r.severity, "value") else r.severity), 3)
+            for r in report.risks
+            if any(e.source == "llm" for e in (r.evidence or []))
+        ))
+        report.risk_score = min(100, _risk_score(
+            confirmed, report.repair_total_max, vehicle.price_rub
+        ) + speculative_score)
+        if report.risk_score >= 75:
+            report.verdict = VerdictEnum.skip
+        elif report.risk_score >= 40 and report.verdict == VerdictEnum.worth_looking:
+            report.verdict = VerdictEnum.caution
+        report.verdict_label = VERDICT_LABELS[report.verdict]
+        report.final_recommendation = _final_recommendation(
+            report.verdict, report.risk_score, report.repair_total_max, vehicle.price_rub
+        )
     except Exception:
         pass
 

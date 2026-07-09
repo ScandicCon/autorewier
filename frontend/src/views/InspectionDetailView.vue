@@ -119,7 +119,8 @@ const repairRange = computed(() => {
   if (!insp) return null
   const rmin = insp.repair_min_rub ?? report.value?.repair_total_min
   const rmax = insp.repair_max_rub ?? report.value?.repair_total_max
-  if (rmin != null && rmax != null) return `${fmt(rmin)} – ${fmt(rmax)} ₽`
+  // «0 – 0 ₽» не показываем: смета не посчиталась — строка просто скрывается.
+  if (rmin != null && rmax != null && (rmin > 0 || rmax > 0)) return `${fmt(rmin)} – ${fmt(rmax)} ₽`
   return null
 })
 
