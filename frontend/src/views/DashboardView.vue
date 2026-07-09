@@ -105,7 +105,7 @@ function fmt(n) {
   <!-- NAV -->
   <header class="nav">
     <div class="wrap">
-      <router-link class="logo" to="/app">ПОДКАПОТ</router-link>
+      <router-link class="logo" to="/app"><img class="logo-ico" src="/img/logo-mark.png" alt="" aria-hidden="true">ПОДКАПОТ</router-link>
       <nav class="nav-links">
         <router-link to="/app">Проверки</router-link>
       </nav>

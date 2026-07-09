@@ -212,7 +212,7 @@ function priorityLabel(priority) {
           Мои проверки
         </router-link>
       </div>
-      <router-link class="logo" to="/app">ПОДКАПОТ</router-link>
+      <router-link class="logo" to="/app"><img class="logo-ico" src="/img/logo-mark.png" alt="" aria-hidden="true">ПОДКАПОТ</router-link>
       <div style="width:120px"></div>
     </div>
   </header>

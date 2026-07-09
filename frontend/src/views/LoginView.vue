@@ -42,6 +42,7 @@ async function submit() {
     <div class="auth-art">
       <img src="/img/login.png" alt="" onerror="this.style.display='none'">
       <div class="art-cap">
+        <img src="/img/logo-mark.png" alt="" style="width:60px;height:60px;display:block;margin:0 auto 10px;filter:drop-shadow(0 0 12px rgba(63,208,255,.45))">
         <b>ПОДКАПОТ</b>
         Твой диагност уже завёл мотор
       </div>
