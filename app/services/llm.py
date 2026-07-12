@@ -64,6 +64,13 @@ async def enrich_report_with_llm(
         ],
         temperature=0.3,
     )
+    # Учёт себестоимости: сколько токенов реально потратила проверка.
+    from app.services.cost_tracking import record_llm
+    usage = getattr(response, "usage", None)
+    record_llm(
+        getattr(usage, "prompt_tokens", 0) if usage else 0,
+        getattr(usage, "completion_tokens", 0) if usage else 0,
+    )
     raw = response.choices[0].message.content or "{}"
     raw = raw.strip()
     if raw.startswith("```"):

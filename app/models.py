@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -174,6 +174,11 @@ class Inspection(Base):
 
     repair_min_rub: Mapped[int | None] = mapped_column(Integer)
     repair_max_rub: Mapped[int | None] = mapped_column(Integer)
+
+    # Фактическая себестоимость этой проверки (Фаза 0.4): рублёвая оценка +
+    # разбивка по токенам/кредитам (cost_breakdown).
+    cost_rub: Mapped[float | None] = mapped_column(Float)
+    cost_breakdown: Mapped[dict | None] = mapped_column(JSON)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

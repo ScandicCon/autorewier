@@ -93,6 +93,17 @@ async def _fetch_via_scrapingbee(
         async with httpx.AsyncClient(timeout=timeout + 20.0) as client:
             resp = await client.get(SCRAPINGBEE_ENDPOINT, params=params)
             if resp.status_code == 200 and resp.text:
+                # Учёт себестоимости: ScrapingBee возвращает потраченные
+                # кредиты в заголовке Spb-cost.
+                from app.services.cost_tracking import record_scrapingbee
+                try:
+                    headers = getattr(resp, "headers", {}) or {}
+                    credits = int(
+                        headers.get("Spb-cost") or headers.get("spb-cost") or 0
+                    )
+                except (TypeError, ValueError, AttributeError):
+                    credits = 0
+                record_scrapingbee(credits)
                 return resp.text
             logger.warning(
                 "scrapingbee returned status %s for %s", resp.status_code, url
