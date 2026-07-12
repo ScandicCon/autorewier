@@ -53,12 +53,21 @@ async def admin_stats(
         select(func.count()).select_from(Payment).where(Payment.status == PaymentStatus.SUCCEEDED)
     )
     queue_depth = await get_queue_depth()
+    # Себестоимость проверок (Фаза 0.4): агрегаты по сохранённой cost_rub.
+    inspections_with_cost = await session.scalar(
+        select(func.count()).select_from(Inspection).where(Inspection.cost_rub.isnot(None))
+    )
+    total_cost_rub = await session.scalar(select(func.sum(Inspection.cost_rub)))
+    avg_cost_rub = await session.scalar(select(func.avg(Inspection.cost_rub)))
     return {
         "users_total": users_total or 0,
         "inspections_total": inspections_total or 0,
         "payments_total": payments_total or 0,
         "succeeded_payments": succeeded_payments or 0,
         "queue_depth": queue_depth,
+        "inspections_with_cost": inspections_with_cost or 0,
+        "total_cost_rub": round(total_cost_rub, 4) if total_cost_rub is not None else None,
+        "avg_cost_rub": round(avg_cost_rub, 4) if avg_cost_rub is not None else None,
     }
 
 

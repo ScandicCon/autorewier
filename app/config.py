@@ -155,6 +155,14 @@ class Settings(BaseSettings):
     scrapingbee_premium_proxy: bool = True  # резидентные прокси (нужны для Avito)
     scrapingbee_country_code: str = "ru"
 
+    # Себестоимость проверки: ставки перевода расхода в рубли (Фаза 0.4 ПЛАНа).
+    # Токены OpenRouter — ₽ за 1000 токенов (prompt/completion считаются раздельно);
+    # кредиты ScrapingBee — ₽ за 1 кредит. Значения по умолчанию грубые —
+    # уточните под свой тариф/модель, сырьё в БД сохраняется в любом случае.
+    cost_llm_rub_per_1k_prompt: float = 0.02
+    cost_llm_rub_per_1k_completion: float = 0.08
+    cost_scrapingbee_rub_per_credit: float = 0.02
+
     @field_validator("database_url", mode="before")
     @classmethod
     def normalize_database_url(cls, value: str | None) -> str:
