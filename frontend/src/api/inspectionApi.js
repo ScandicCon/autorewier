@@ -135,6 +135,14 @@ export async function registerUser(email, password) {
   return request("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) });
 }
 
+// Обмен одноразового кода из OAuth-редиректа на сессионный JWT.
+// JWT больше не приходит в URL — только код, который меняем на токен здесь.
+export async function exchangeOAuthCode(code) {
+  const data = await request("/auth/oauth/exchange", { method: "POST", body: JSON.stringify({ code }) });
+  if (data && data.token) setToken(data.token);
+  return data;
+}
+
 export async function logoutUser() {
   try {
     return await request("/auth/logout", { method: "POST" });
