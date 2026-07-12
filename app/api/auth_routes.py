@@ -1,3 +1,4 @@
+import hmac
 import secrets
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
@@ -11,6 +12,7 @@ from app.models import User
 from app.schemas import LoginRequest, RegisterRequest
 from app.services.subscription import is_pro_active
 from app.services import oauth as oauth_service
+from app.services.oauth_exchange import issue_exchange_code, redeem_exchange_code
 from app.security.rate_limit import enforce_rate_limit
 from app.services.analytics import track_event
 from app.services.auth import (
@@ -330,6 +332,33 @@ async def confirm_verification(
 # Вход через соцсети (OAuth) + Telegram Login
 # ---------------------------------------------------------------------------
 
+# Кука с OAuth-`state`. Ставится на /start, сверяется в /callback — защита от
+# CSRF на вход (security-ревью 2026-07-10, находка #1). SameSite=Lax: кука едет
+# при top-level редиректе от провайдера обратно на наш callback.
+OAUTH_STATE_COOKIE = "autorewier_oauth_state"
+_OAUTH_STATE_PATH = "/api/v1/auth"
+
+
+def _oauth_state_cookie_kwargs() -> dict:
+    kwargs = {
+        "httponly": True,
+        "max_age": 600,
+        "samesite": "lax",
+        "secure": settings.effective_cookie_secure,
+        "path": _OAUTH_STATE_PATH,
+    }
+    if settings.web_cookie_domain.strip():
+        kwargs["domain"] = settings.web_cookie_domain.strip()
+    return kwargs
+
+
+def _clear_oauth_state(response: Response) -> None:
+    kwargs = {"path": _OAUTH_STATE_PATH}
+    if settings.web_cookie_domain.strip():
+        kwargs["domain"] = settings.web_cookie_domain.strip()
+    response.delete_cookie(OAUTH_STATE_COOKIE, **kwargs)
+
+
 @router.get("/oauth/providers")
 async def oauth_providers():
     """Список включённых провайдеров соц-входа (для фронта)."""
@@ -343,7 +372,12 @@ async def oauth_start(provider: str, request: Request):
         raise HTTPException(404, "Провайдер недоступен или не настроен")
     await enforce_rate_limit(request, scope="oauth_start", limit=20, window_seconds=300)
     state = secrets.token_urlsafe(16)
-    return RedirectResponse(oauth_service.build_authorize_url(provider, state), status_code=307)
+    response = RedirectResponse(
+        oauth_service.build_authorize_url(provider, state), status_code=307
+    )
+    # Привязываем state к браузеру через куку — в callback сверим и отклоним чужой.
+    response.set_cookie(OAUTH_STATE_COOKIE, state, **_oauth_state_cookie_kwargs())
+    return response
 
 
 @router.get("/oauth/{provider}/callback")
@@ -351,12 +385,23 @@ async def oauth_callback(
     provider: str,
     request: Request,
     code: str | None = None,
+    state: str | None = None,
     error: str | None = None,
     session: AsyncSession = Depends(get_db),
+    oauth_state: str | None = Cookie(None, alias=OAUTH_STATE_COOKIE),
 ):
     redirect_base = oauth_service.success_redirect()
+
+    def _fail() -> RedirectResponse:
+        resp = RedirectResponse(f"{redirect_base}?error=oauth_failed", status_code=307)
+        _clear_oauth_state(resp)
+        return resp
+
     if error or not code or not oauth_service.provider_enabled(provider):
-        return RedirectResponse(f"{redirect_base}?error=oauth_failed", status_code=307)
+        return _fail()
+    # Проверка state: должен прийти в query и совпасть с сохранённым в куке.
+    if not state or not oauth_state or not hmac.compare_digest(state, oauth_state):
+        return _fail()
     try:
         profile = await oauth_service.exchange_code(provider, code)
         user = await oauth_service.find_or_create_oauth_user(
@@ -365,12 +410,33 @@ async def oauth_callback(
             sub=profile["sub"],
             email=profile.get("email"),
             name=profile.get("name"),
+            email_verified=bool(profile.get("email_verified")),
         )
     except Exception:
-        return RedirectResponse(f"{redirect_base}?error=oauth_failed", status_code=307)
+        return _fail()
     await track_event("oauth_login", user_id=user.id, props={"provider": provider})
     token = create_jwt(user.id, user.email)
-    return RedirectResponse(f"{redirect_base}?token={token}", status_code=307)
+    # JWT не кладём в URL: отдаём одноразовый код, фронт меняет его на токен POST-ом.
+    exchange_code = await issue_exchange_code(
+        token=token, user_id=user.id, email=user.email
+    )
+    resp = RedirectResponse(f"{redirect_base}?code={exchange_code}", status_code=307)
+    _clear_oauth_state(resp)
+    return resp
+
+
+@router.post("/oauth/exchange")
+async def oauth_exchange(
+    body: dict,
+    request: Request,
+):
+    """Обмен одноразового кода из OAuth-редиректа на сессионный JWT."""
+    await enforce_rate_limit(request, scope="oauth_exchange", limit=30, window_seconds=300)
+    code = (body or {}).get("code")
+    data = await redeem_exchange_code(str(code) if code else "")
+    if not data:
+        raise HTTPException(400, "Код входа недействителен или истёк")
+    return {"token": data["token"], "id": data["uid"], "email": data["email"]}
 
 
 @router.get("/telegram/callback")
@@ -389,7 +455,10 @@ async def telegram_callback(request: Request, session: AsyncSession = Depends(ge
     )
     await track_event("oauth_login", user_id=user.id, props={"provider": "telegram"})
     token = create_jwt(user.id, user.email)
-    return RedirectResponse(f"{redirect_base}?token={token}", status_code=307)
+    exchange_code = await issue_exchange_code(
+        token=token, user_id=user.id, email=user.email
+    )
+    return RedirectResponse(f"{redirect_base}?code={exchange_code}", status_code=307)
 
 
 @router.post("/telegram")

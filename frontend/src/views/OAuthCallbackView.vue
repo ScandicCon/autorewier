@@ -1,17 +1,22 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { setToken } from '../api/inspectionApi'
+import { exchangeOAuthCode } from '../api/inspectionApi'
 
 const route = useRoute()
 const router = useRouter()
 
-onMounted(() => {
-  const t = route.query.token
-  if (t) {
-    setToken(String(t))
+onMounted(async () => {
+  // Бэкенд отдаёт одноразовый код (не JWT в URL) — меняем его на токен POST-ом.
+  const code = route.query.code
+  if (!code) {
+    router.replace('/login?error=oauth')
+    return
+  }
+  try {
+    await exchangeOAuthCode(String(code))
     router.replace('/app')
-  } else {
+  } catch {
     router.replace('/login?error=oauth')
   }
 })

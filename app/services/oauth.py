@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import time
 from urllib.parse import urlencode
 
 import httpx
@@ -21,6 +22,9 @@ from app.models import User
 from app.services.auth import issue_session
 
 REDIRECT_PROVIDERS = ("yandex", "vk", "google")
+
+# Максимальный возраст подписи Telegram Login (сек). Старше — отклоняем.
+_TELEGRAM_AUTH_MAX_AGE_SECONDS = 24 * 60 * 60
 
 
 def _client(provider: str) -> tuple[str, str]:
@@ -112,6 +116,8 @@ async def exchange_code(provider: str, code: str) -> dict:
                 "provider": "yandex",
                 "sub": str(data.get("id")),
                 "email": (data.get("default_email") or "").lower() or None,
+                # Yandex отдаёт подтверждённый почтовый адрес аккаунта.
+                "email_verified": bool(data.get("default_email")),
                 "name": data.get("real_name") or data.get("display_name") or data.get("login"),
             }
         if provider == "google":
@@ -137,6 +143,8 @@ async def exchange_code(provider: str, code: str) -> dict:
                 "provider": "google",
                 "sub": str(data.get("id")),
                 "email": (data.get("email") or "").lower() or None,
+                # Google явно сообщает статус верификации почты.
+                "email_verified": bool(data.get("verified_email")),
                 "name": data.get("name"),
             }
         if provider == "vk":
@@ -155,6 +163,8 @@ async def exchange_code(provider: str, code: str) -> dict:
                 "provider": "vk",
                 "sub": str(data.get("user_id")),
                 "email": (data.get("email") or "").lower() or None,
+                # VK возвращает почту, привязанную к аккаунту (подтверждённую).
+                "email_verified": bool((data.get("email") or "").strip()),
                 "name": None,
             }
     raise ValueError(f"Unknown provider: {provider}")
@@ -172,7 +182,17 @@ def verify_telegram_auth(data: dict) -> bool:
     data_check_string = "\n".join(pairs)
     secret_key = hashlib.sha256(token.encode()).digest()
     calc = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-    return hmac.compare_digest(calc, str(received_hash))
+    if not hmac.compare_digest(calc, str(received_hash)):
+        return False
+    # Свежесть: отклоняем подписанные данные старше суток, чтобы устаревший
+    # перехваченный набор нельзя было переиспользовать бессрочно.
+    try:
+        auth_date = int(data.get("auth_date", 0))
+    except (TypeError, ValueError):
+        return False
+    if auth_date <= 0 or (time.time() - auth_date) > _TELEGRAM_AUTH_MAX_AGE_SECONDS:
+        return False
+    return True
 
 
 async def find_or_create_oauth_user(
@@ -182,13 +202,23 @@ async def find_or_create_oauth_user(
     sub: str,
     email: str | None,
     name: str | None = None,
+    email_verified: bool = False,
 ) -> User:
-    """Находит пользователя по email или по (provider, sub), иначе создаёт нового.
-    Соц-вход выдаёт уже подтверждённый аккаунт (email_verified=True)."""
+    """Находит пользователя по (provider, sub) или по подтверждённому email,
+    иначе создаёт нового.
+
+    Безопасность (security-ревью 2026-07-10, находка #3): связывать соц-вход с
+    существующим аккаунтом по email можно ТОЛЬКО если провайдер подтвердил этот
+    email (email_verified=True). Иначе атакующий, заведя у провайдера аккаунт с
+    чужим неподтверждённым email, вошёл бы в аккаунт жертвы. Непроверенный email
+    не сохраняем и по нему не линкуем — работаем строго по паре (provider, sub).
+    """
+    trusted_email = email if (email and email_verified) else None
     user: User | None = None
 
-    if email:
-        res = await session.execute(select(User).where(User.email == email))
+    # Линковка к существующему аккаунту по email — только при верифицированном email.
+    if trusted_email:
+        res = await session.execute(select(User).where(User.email == trusted_email))
         user = res.scalar_one_or_none()
 
     if user is None:
@@ -198,9 +228,11 @@ async def find_or_create_oauth_user(
         user = res.scalar_one_or_none()
 
     if user is None:
+        # Синтетический email, если провайдер не дал подтверждённого — чтобы не
+        # занять и не пересечься с чужим реальным адресом.
         user = User(
-            email=email or f"{provider}_{sub}@oauth.local",
-            email_verified=True,
+            email=trusted_email or f"{provider}_{sub}@oauth.local",
+            email_verified=bool(trusted_email),
             oauth_provider=provider,
             oauth_id=str(sub),
         )
@@ -210,7 +242,7 @@ async def find_or_create_oauth_user(
         if not user.oauth_provider:
             user.oauth_provider = provider
             user.oauth_id = str(sub)
-        if email and not user.email_verified:
+        if trusted_email and not user.email_verified:
             user.email_verified = True
 
     issue_session(user)

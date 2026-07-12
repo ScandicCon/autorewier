@@ -15,6 +15,7 @@ Shp_*-параметры используем, чтобы протащить id 
 """
 
 import hashlib
+import hmac
 import json
 import os
 from urllib.parse import quote, urlencode
@@ -96,7 +97,8 @@ def verify_result_signature(
     expected = build_result_signature(
         out_sum, inv_id, _env("ROBOKASSA_PASSWORD2"), shp=shp
     )
-    return (signature or "").lower() == expected.lower()
+    # Константное сравнение против timing-атак (security-ревью 2026-07-10, #5).
+    return hmac.compare_digest((signature or "").lower(), expected.lower())
 
 
 def build_payment_url(

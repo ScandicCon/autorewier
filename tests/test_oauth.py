@@ -2,6 +2,7 @@
 import asyncio
 import hashlib
 import hmac
+import time
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -48,14 +49,24 @@ def test_build_authorize_url(monkeypatch):
 
 def test_verify_telegram_auth(monkeypatch):
     monkeypatch.setattr(settings, "telegram_bot_token", "123456:TESTTOKEN")
-    data = {"id": "777", "first_name": "Иван", "username": "ivan", "auth_date": "1700000000"}
     secret = hashlib.sha256(b"123456:TESTTOKEN").digest()
-    check = "\n".join(sorted(f"{k}={v}" for k, v in data.items()))
-    good_hash = hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
 
+    def _sign(payload):
+        check = "\n".join(sorted(f"{k}={v}" for k, v in payload.items()))
+        return hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
+
+    # Свежая подпись (auth_date "сейчас") проходит.
+    data = {"id": "777", "first_name": "Иван", "username": "ivan",
+            "auth_date": str(int(time.time()))}
+    good_hash = _sign(data)
     assert oauth.verify_telegram_auth({**data, "hash": good_hash}) is True
     assert oauth.verify_telegram_auth({**data, "hash": "deadbeef"}) is False
     assert oauth.verify_telegram_auth({**data}) is False  # нет hash
+
+    # Устаревшая подпись (auth_date старше суток) отклоняется, даже с верным hash.
+    stale = {"id": "777", "first_name": "Иван", "username": "ivan",
+             "auth_date": str(int(time.time()) - 48 * 3600)}
+    assert oauth.verify_telegram_auth({**stale, "hash": _sign(stale)}) is False
 
 
 async def _with_session(fn):
@@ -73,15 +84,17 @@ async def _with_session(fn):
 def test_find_or_create_by_email_and_link():
     async def scenario(session):
         u1 = await oauth.find_or_create_oauth_user(
-            session, provider="yandex", sub="A1", email="user@example.com", name="U"
+            session, provider="yandex", sub="A1", email="user@example.com",
+            name="U", email_verified=True,
         )
         assert u1.id is not None
         assert u1.email == "user@example.com"
         assert u1.email_verified is True
         assert u1.oauth_provider == "yandex"
-        # повторный вход тем же email -> тот же пользователь
+        # повторный вход тем же ПОДТВЕРЖДЁННЫМ email -> тот же пользователь
         u2 = await oauth.find_or_create_oauth_user(
-            session, provider="google", sub="G2", email="user@example.com"
+            session, provider="google", sub="G2", email="user@example.com",
+            email_verified=True,
         )
         assert u2.id == u1.id
     _run(_with_session(scenario))
@@ -100,4 +113,25 @@ def test_find_or_create_without_email():
             session, provider="telegram", sub="555", email=None
         )
         assert u2.id == u.id
+    _run(_with_session(scenario))
+
+
+def test_find_or_create_unverified_email_does_not_link():
+    """Непроверенный провайдером email не должен линковаться к чужому аккаунту
+    (security-ревью 2026-07-10, находка #3)."""
+    async def scenario(session):
+        victim = await oauth.find_or_create_oauth_user(
+            session, provider="yandex", sub="V1", email="victim@example.com",
+            email_verified=True,
+        )
+        # Атакующий заводит у другого провайдера аккаунт с тем же, но НЕ
+        # подтверждённым email — линковки к жертве быть не должно.
+        attacker = await oauth.find_or_create_oauth_user(
+            session, provider="google", sub="ATT", email="victim@example.com",
+            email_verified=False,
+        )
+        assert attacker.id != victim.id
+        assert attacker.email != "victim@example.com"
+        assert attacker.email_verified is False
+        assert attacker.oauth_provider == "google"
     _run(_with_session(scenario))
