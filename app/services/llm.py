@@ -3,7 +3,7 @@ import json
 from openai import AsyncOpenAI
 
 from app.config import settings
-from app.schemas import AnalysisReport, RiskItem, VehicleInput
+from app.schemas import EvidenceItem, AnalysisReport, RiskItem, VehicleInput
 
 
 def _openrouter_client() -> AsyncOpenAI:
@@ -64,6 +64,13 @@ async def enrich_report_with_llm(
         ],
         temperature=0.3,
     )
+    # Учёт себестоимости: сколько токенов реально потратила проверка.
+    from app.services.cost_tracking import record_llm
+    usage = getattr(response, "usage", None)
+    record_llm(
+        getattr(usage, "prompt_tokens", 0) if usage else 0,
+        getattr(usage, "completion_tokens", 0) if usage else 0,
+    )
     raw = response.choices[0].message.content or "{}"
     raw = raw.strip()
     if raw.startswith("```"):
@@ -76,6 +83,16 @@ async def enrich_report_with_llm(
                 title=item.get("title", "AI"),
                 severity=item.get("severity", "medium"),
                 description=item.get("description", ""),
+                # Метка источника: типовой риск модели от нейросети, не
+                # подтверждённый дефект. Учитывается в risk_score с меньшим
+                # весом (см. maybe_enrich_with_llm).
+                evidence=[
+                    EvidenceItem(
+                        source="llm",
+                        signal="model_pattern",
+                        details="Типовой риск модели — проверить при осмотре",
+                    )
+                ],
             )
         )
     if add := data.get("summary_addition"):

@@ -601,6 +601,9 @@ class AdminStatsResponse(BaseModel):
     payments_total: int
     succeeded_payments: int
     queue_depth: int | None = None
+    inspections_with_cost: int | None = None
+    total_cost_rub: float | None = None
+    avg_cost_rub: float | None = None
 
 
 class AdminSupportStatusResponse(BaseModel):

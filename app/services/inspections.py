@@ -22,6 +22,7 @@ from app.services.autocode import request_vin_report
 from app.services.image_analysis import analyze_photo_urls
 from app.services.listing_text import extract_listing_repairs, repairs_to_text
 from app.services.parts_prices import build_parts_pricing
+from app.services import cost_tracking
 from app.services.parsers import is_avito_url, parse_avito_url, parse_listing_url
 from app.services.subscription import (
     can_create_inspection,
@@ -165,6 +166,10 @@ async def create_inspection(
     if not allowed:
         raise PermissionError(msg)
 
+    # Открываем учёт себестоимости: парсинг (ScrapingBee) и LLM ниже
+    # запишут в него токены/кредиты этой проверки.
+    cost_tracking.start()
+
     vehicle = data.vehicle or VehicleInput()
     platform = None
     listing_repairs_list: list[str] = _parse_repairs_list(data.listing_repairs, vehicle)
@@ -267,6 +272,8 @@ async def create_inspection(
 
     parts_dump = [p.model_dump() for p in report.parts_pricing]
 
+    cost_snap = cost_tracking.snapshot_current()
+
     ins = Inspection(
         user_id=user.id,
         stage=InspectionStage.PRE_INSPECTION,
@@ -285,6 +292,8 @@ async def create_inspection(
         parts_pricing=parts_dump,
         repair_min_rub=report.repair_total_min,
         repair_max_rub=report.repair_total_max,
+        cost_rub=cost_snap["cost_rub"],
+        cost_breakdown=cost_snap,
     )
     _apply_vehicle(ins, vehicle)
     session.add(ins)

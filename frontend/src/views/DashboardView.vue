@@ -150,9 +150,9 @@ function fmt(n) {
       <!-- ERROR -->
       <div v-if="error" class="auth-error-msg" style="margin-bottom:20px">{{ error }}</div>
 
-      <!-- LOADING -->
+      <!-- LOADING (скелетон с пульсацией — холодный старт API может длиться ~4 сек) -->
       <div v-if="loading">
-        <div v-for="i in 3" :key="i" class="rep-card" style="opacity:.45;margin-bottom:12px;pointer-events:none">
+        <div v-for="i in 3" :key="i" class="rep-card" style="margin-bottom:12px;pointer-events:none;animation:pulse 1.4s ease-in-out infinite">
           <div class="rep-thumb" style="background:rgba(63,208,255,.04)"></div>
           <div class="rep-main">
             <div style="height:14px;width:180px;background:var(--line);border-radius:6px;margin-bottom:8px"></div>
