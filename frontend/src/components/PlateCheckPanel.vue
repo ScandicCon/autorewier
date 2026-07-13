@@ -20,7 +20,7 @@ async function run() {
     report.value = await checkByPlate(value)
   } catch (e) {
     error.value = e?.status === 402
-      ? 'Закончились VIN-отчёты. Оформите Pro или докупите пакет.'
+      ? 'Лимит проверок по VIN исчерпан. Оформите Pro или докупите пакет.'
       : (e?.message || 'Не удалось проверить номер. Проверьте формат (пример: А123ВС777).')
   } finally {
     loading.value = false
