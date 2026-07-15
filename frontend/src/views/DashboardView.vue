@@ -297,7 +297,7 @@ function fmt(n) {
         <div class="carline" style="margin-bottom:6px">// VIN-ОТЧЁТЫ</div>
         <p style="color:var(--muted);font-size:13px;margin-bottom:6px">
           <template v-if="packsInfo.is_pro">Включено в Pro: {{ packsInfo.included_per_month }}/мес · осталось в этом месяце: {{ packsInfo.quota_left }}.</template>
-          <template v-else>VIN-отчёты доступны на Pro или по пакетам.</template>
+          <template v-else>Проверка с учётом сведений по VIN доступна на Pro или по пакетам.</template>
           Куплено сверх: {{ packsInfo.report_credits }}.
         </p>
         <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Нужно больше отчётов — докупи пакет:</p>

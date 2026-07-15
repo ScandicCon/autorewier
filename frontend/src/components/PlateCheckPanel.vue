@@ -20,7 +20,7 @@ async function run() {
     report.value = await checkByPlate(value)
   } catch (e) {
     error.value = e?.status === 402
-      ? 'Закончились VIN-отчёты. Оформите Pro или докупите пакет.'
+      ? 'Лимит проверок по VIN исчерпан. Докупите пакет или оформите Pro — в него входит месячный лимит проверок.'
       : (e?.message || 'Не удалось проверить номер. Проверьте формат (пример: А123ВС777).')
   } finally {
     loading.value = false
@@ -35,7 +35,7 @@ async function run() {
       ПРОВЕРКА ПО ГОС-НОМЕРУ
     </div>
 
-    <p class="pc-hint">Введите госномер — по нему определится VIN и история авто для анализа рисков.</p>
+    <p class="pc-hint">Введите госномер — по нему определится VIN для анализа рисков.</p>
 
     <div class="pc-row">
       <input
