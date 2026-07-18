@@ -13,6 +13,7 @@ from app.api.grz_routes import router as grz_router
 from app.api.photo_routes import router as photo_router
 from app.api.part_finder_routes import router as part_finder_router
 from app.api.robokassa_routes import router as robokassa_router
+from app.api.prodamus_routes import router as prodamus_router
 from app.api.routes import router as api_router
 from app.config import BASE_DIR, settings
 from app.database import init_db
@@ -98,6 +99,7 @@ app.include_router(part_finder_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(payment_router, prefix="/api/v1")
 app.include_router(robokassa_router, prefix="/api/v1")
+app.include_router(prodamus_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(support_router, prefix="/api/v1")
 if settings.enable_server_rendered_web:

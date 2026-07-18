@@ -65,6 +65,12 @@ class Settings(BaseSettings):
         "77.75.156.11/32,77.75.156.35/32,2a02:5180::/32"
     )
 
+    # Prodamus (приём оплаты самозанятым, авто-чеки НПД).
+    # form_url — адрес платёжной формы вида https://<shop>.payform.ru
+    prodamus_form_url: str = ""
+    prodamus_secret_key: str = ""
+    prodamus_return_url: str = "https://www.podcapot.ru/app?paid=1"
+
     subscription_pro_price_rub: int = 990
     free_inspections_per_month: int = 3
     # Гостевой режим: проверка без регистрации (первое касание с TikTok/рекламы).
@@ -228,6 +234,10 @@ class Settings(BaseSettings):
     @property
     def yookassa_enabled(self) -> bool:
         return bool(self.yookassa_shop_id.strip() and self.yookassa_secret_key.strip())
+
+    @property
+    def prodamus_enabled(self) -> bool:
+        return bool(self.prodamus_form_url.strip() and self.prodamus_secret_key.strip())
 
     @property
     def is_production(self) -> bool:
