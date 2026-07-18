@@ -184,10 +184,9 @@ export async function resetPassword(token, newPassword) {
 }
 
 export async function subscribePro() {
-  // Оплата Pro через Robokassa. Ответ приводим к {confirmation_url},
-  // чтобы существующий обработчик goPro() работал без изменений.
-  const data = await request("/payments/robokassa/subscribe", { method: "POST" });
-  return { confirmation_url: data.payment_url, ...data };
+  // Оплата Pro через Prodamus (самозанятый, авто-чеки НПД). Эндпоинт уже
+  // отдаёт {confirmation_url}, обработчик goPro() работает без изменений.
+  return request("/payments/prodamus/subscribe", { method: "POST" });
 }
 
 export async function getReportPacks() {
@@ -195,10 +194,9 @@ export async function getReportPacks() {
 }
 
 export async function buyReportPack(packSize) {
-  // Покупка пакета VIN-отчётов через Robokassa. Приводим к {confirmation_url}
-  // для существующего обработчика buyPack().
-  const data = await request("/payments/robokassa/buy-pack", { method: "POST", body: JSON.stringify({ pack_size: packSize }) });
-  return { confirmation_url: data.payment_url, ...data };
+  // Покупка пакета проверок по VIN через Prodamus. Эндпоинт уже отдаёт
+  // {confirmation_url} для существующего обработчика buyPack().
+  return request("/payments/prodamus/buy-pack", { method: "POST", body: JSON.stringify({ pack_size: packSize }) });
 }
 
 export async function checkByPlate(plate) {

@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { fetchInspectionsHistory, fetchCurrentUser, logoutUser, subscribePro, getReportPacks, buyReportPack } from '../api/inspectionApi'
 
 const router = useRouter()
+const route = useRoute()
+const paidNotice = ref(false)
 const loading = ref(true)
 const history = ref([])
 const currentUser = ref(null)
@@ -15,6 +17,7 @@ const packsInfo = ref(null)
 const buyingPack = ref(0)
 
 onMounted(async () => {
+  paidNotice.value = !!route.query.paid
   try {
     const [user, items] = await Promise.all([fetchCurrentUser(), fetchInspectionsHistory()])
     currentUser.value = user
@@ -121,6 +124,10 @@ function fmt(n) {
   </header>
 
   <div class="wrap" style="padding-top:32px;padding-bottom:60px">
+
+    <p v-if="paidNotice" style="margin:0 0 16px;padding:12px 16px;border-radius:10px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#86efac;font-size:14px">
+      Оплата принята — статус обновится в течение минуты. Если не изменился, обновите страницу.
+    </p>
 
     <!-- HERO -->
     <div class="pbanner" style="margin-bottom:28px">
