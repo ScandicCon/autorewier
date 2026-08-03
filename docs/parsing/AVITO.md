@@ -89,6 +89,21 @@ POST /api/v1/avito/warmup
 
 Если описание пустое — обновите кэш: удалите файл в `data/cache/avito/` для этого ID и загрузите ссылку снова (15–40 сек).
 
+## ScrapingBee — последний эшелон (для прода)
+
+Если задан `SCRAPINGBEE_API_KEY`, то после неудачи Playwright и httpx загрузка
+объявления уходит в ScrapingBee (резидентные RU-прокси, `premium_proxy=true`):
+сначала без JS-рендера (~10 кредитов), при неудаче — один раз с рендером (~25).
+Кредиты пишутся в учёт себестоимости (`cost_tracking`). Без ключа поведение
+не меняется. Порядок эшелонов на проде: свой `AVITO_PROXY` → httpx → ScrapingBee.
+
+```env
+SCRAPINGBEE_API_KEY=...
+SCRAPINGBEE_PREMIUM_PROXY=true
+SCRAPINGBEE_COUNTRY_CODE=ru
+SCRAPINGBEE_RENDER_JS=false
+```
+
 ## Производственный сервер
 
 - Используйте резидентный прокси в `AVITO_PROXY`

@@ -62,6 +62,32 @@ async def fetch_html(
     return await _fetch_direct(url, timeout=timeout, user_agent=user_agent)
 
 
+async def fetch_via_scrapingbee(
+    url: str,
+    *,
+    timeout: float = 20.0,
+    render_js: bool | None = None,
+    premium_proxy: bool | None = None,
+    country_code: str | None = None,
+) -> str | None:
+    """Загрузка ТОЛЬКО через ScrapingBee, без httpx-фолбэка.
+
+    Зачем: fetch_html() при неудаче ScrapingBee падает на прямой httpx — для
+    Avito это бессмысленно (прямой запрос с серверного IP уже был испробован
+    и заблокирован). Этот публичный вход отдаёт None, если ключа нет или
+    ScrapingBee не справился, — вызывающий код сам решает, как деградировать.
+    """
+    if not settings.scrapingbee_enabled:
+        return None
+    return await _fetch_via_scrapingbee(
+        url,
+        timeout=timeout,
+        render_js=render_js,
+        premium_proxy=premium_proxy,
+        country_code=country_code,
+    )
+
+
 async def _fetch_via_scrapingbee(
     url: str,
     *,

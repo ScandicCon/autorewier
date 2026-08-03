@@ -571,6 +571,26 @@ async def _fetch_httpx(url: str) -> tuple[str | None, int | None, str | None]:
     return None, None, last_error or "httpx_failed"
 
 
+async def _fetch_scrapingbee(url: str, *, render_js: bool) -> str | None:
+    """Загрузка через ScrapingBee (premium RU proxy) — последний эшелон.
+
+    Зачем: на дата-центровом IP (Yandex Cloud) Playwright и httpx получают
+    captcha/403 почти всегда. ScrapingBee ходит со своих резидентных прокси
+    и снимает эту проблему без изменения логики разбора HTML.
+    Кредиты учитываются в cost_tracking внутри слоя scraping.
+    """
+    from app.services.scraping import fetch_via_scrapingbee
+
+    timeout_sec = max(settings.avito_fetch_timeout_ms / 1000.0, 15.0)
+    return await fetch_via_scrapingbee(
+        url,
+        timeout=timeout_sec,
+        render_js=render_js,
+        premium_proxy=settings.scrapingbee_premium_proxy,
+        country_code=settings.scrapingbee_country_code,
+    )
+
+
 def _coerce_httpx_result(
     raw_result: object,
 ) -> tuple[str | None, int | None, str | None]:
@@ -864,6 +884,45 @@ async def fetch_avito_html(url: str) -> AvitoFetchResult:
                     statuses.append(AvitoFetchStatus.invalid_html)
                     errors.append(f"HTTP({status_code}): invalid listing html")
                 await _with_retry_pause(attempt)
+
+    # Последний эшелон: ScrapingBee (если задан ключ). Идём по основному
+    # desktop-URL; сначала без JS-рендера (дешевле по кредитам), при неудаче —
+    # один раз с рендером. Все прямые источники к этому моменту исчерпаны.
+    if settings.scrapingbee_enabled:
+        render_modes = [bool(settings.scrapingbee_render_js)]
+        if not settings.scrapingbee_render_js:
+            render_modes.append(True)
+        for render_js in render_modes:
+            if time.monotonic() - started_at >= budget_sec:
+                statuses.append(AvitoFetchStatus.transient_error)
+                errors.append("time_budget_exceeded")
+                return _finalize_error_result(statuses, errors)
+            label = f"ScrapingBee(render_js={str(render_js).lower()})"
+            try:
+                html = await _fetch_scrapingbee(url, render_js=render_js)
+            except Exception as exc:
+                statuses.append(AvitoFetchStatus.transient_error)
+                errors.append(f"{label}: {exc}")
+                continue
+            if html and is_valid_listing_html(html):
+                if item_id:
+                    _write_cache(item_id, html)
+                return AvitoFetchResult(
+                    html=html,
+                    status=AvitoFetchStatus.success,
+                    source="scrapingbee",
+                    attempts=1,
+                )
+            detected, reason = detect_block_state(html)
+            if detected:
+                statuses.append(detected)
+                errors.append(f"{label}: {reason or detected.value}")
+            elif html:
+                statuses.append(AvitoFetchStatus.invalid_html)
+                errors.append(f"{label}: invalid listing html")
+            else:
+                statuses.append(AvitoFetchStatus.transient_error)
+                errors.append(f"{label}: no_response")
 
     return _finalize_error_result(statuses, errors)
 

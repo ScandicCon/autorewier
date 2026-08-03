@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap');
+/* Локальные шрифты вместо Google Fonts CDN.
+   Зачем: fonts.googleapis.com в РФ недоступен без VPN — страница ждала внешний
+   ресурс и деградировала. Файлы лежат в frontend/public/fonts/ и отдаются с
+   нашего же домена. Если файла нет — сработает системный фолбэк из font-family. */
+@font-face{font-family:'Onest';src:url('/fonts/Onest-Variable.woff2') format('woff2');font-weight:400 800;font-display:swap}
+@font-face{font-family:'Unbounded';src:url('/fonts/Unbounded-Variable.woff2') format('woff2');font-weight:600 800;font-display:swap}
+@font-face{font-family:'Press Start 2P';src:url('/fonts/PressStart2P-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
 
 :root{
   --bg:#080e20;--bg2:#0b1430;--panel:#0e1838;--panel2:#122047;

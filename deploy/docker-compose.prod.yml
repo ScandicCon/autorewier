@@ -1,0 +1,98 @@
+# Продакшн-стек ПОДКАПОТ для российского хостинга (Yandex Cloud / любой VPS).
+#
+# Зачем: Vercel/Railway в РФ нестабильны — сайт требовал VPN, а робот Яндекса
+# не мог стабильно обойти страницы. Здесь всё живёт на одной машине под одним
+# доменом podcapot.ru: Caddy отдаёт HTTPS и проксирует в api, api раздаёт и
+# фронт (собран в образ), и /api/v1.
+#
+# Запуск:  docker compose -f deploy/docker-compose.prod.yml up -d --build
+# Логи:    docker compose -f deploy/docker-compose.prod.yml logs -f api
+#
+# Требуется файл .env рядом с проектом (см. .env.example) и переменная
+# APP_DOMAIN=podcapot.ru в нём же.
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: podcapot-api
+    env_file: [../.env]
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      ENVIRONMENT: production
+      WEB_BASE_URL: https://www.${APP_DOMAIN}
+      OPENROUTER_SITE_URL: https://www.${APP_DOMAIN}
+      PRODAMUS_RETURN_URL: https://www.${APP_DOMAIN}/app?paid=1
+      OAUTH_REDIRECT_BASE: https://www.${APP_DOMAIN}
+      # Внутренние адреса контейнеров (переопределяют значения из .env).
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://podcapot:${POSTGRES_PASSWORD}@postgres:5432/podcapot}
+      REDIS_URL: redis://redis:6379/0
+      RATE_LIMIT_STORAGE: redis
+    # Миграции применяются до старта приложения.
+    command: ["sh", "-c", "alembic upgrade head && python run_api.py"]
+    volumes:
+      - ../data:/app/data
+    dns:
+      # Яндекс DNS — стабильнее в РФ, чем 8.8.8.8.
+      - 77.88.8.8
+      - 77.88.8.1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_started}
+    restart: unless-stopped
+
+  postgres:
+    # Если используете Managed PostgreSQL в Yandex Cloud — этот сервис можно
+    # убрать, а в .env указать DATABASE_URL на управляемый кластер.
+    image: postgres:16-alpine
+    container_name: podcapot-postgres
+    environment:
+      POSTGRES_USER: podcapot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: podcapot
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U podcapot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: podcapot-redis
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.8
+    container_name: podcapot-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
